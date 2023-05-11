@@ -46,7 +46,7 @@ class IntervalUnionTree(ContinuousActionSpace):
         getcontext().prec = 28
 
         self.root_tree = Node(self.low[0], self.high[0])
-        self.size = Decimal(self.high[0]) - Decimal(self.low[0])
+        self.size = Decimal(f'{self.high[0]}') - Decimal(f'{self.low[0]}')
 
     def __contains__(self, item):
         return self.contains(item)

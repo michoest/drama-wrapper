@@ -1,10 +1,17 @@
+from typing import Optional
+
 from ray import rllib
 import gymnasium as gym
 import numpy as np
 
 
 class DummyEnvironment(rllib.env.MultiAgentEnv):
-    def __init__(self, env_config={}):
+    def __init__(self, env_config=None):
+        super().__init__()
+
+        if env_config is None:
+            env_config = {}
+
         self.agents = env_config.get('agents', ['0', '1'])
         self.number_of_steps = env_config.get('number_of_steps', 5)
         self.observation_space = env_config.get('observation_space',
@@ -15,15 +22,15 @@ class DummyEnvironment(rllib.env.MultiAgentEnv):
     def step(self, actions):
         self.current_step += 1
 
-        observations = {id: self.observation_space.sample() for id in self.agents}
-        rewards = {id: np.random.random() for id in self.agents}
+        observations = {agent_id: self.observation_space.sample() for agent_id in self.agents}
+        rewards = {agent_id: np.random.random() for agent_id in self.agents}
 
         return observations, rewards, {'__all__': self.current_step >= self.number_of_steps}, {}
 
-    def reset(self):
+    def reset(self, *, seed: Optional[int] = None, options: Optional[dict] = None):
         self.current_step = 0
 
-        return {id: self.observation_space.sample() for id in self.agents}
+        return {agent_id: self.observation_space.sample() for agent_id in self.agents}
 
 
 class MatrixGameEnvironment(rllib.env.MultiAgentEnv):
@@ -32,8 +39,13 @@ class MatrixGameEnvironment(rllib.env.MultiAgentEnv):
     consists of a single step.
     """
 
-    def __init__(self, env_config={}):
+    def __init__(self, env_config=None):
         assert 'payoffs' in env_config
+        super().__init__()
+
+        if env_config is None:
+            env_config = {}
+
         self.payoffs = env_config['payoffs']
         (self.number_of_actions, *_, self.number_of_agents) = self.payoffs.shape
 
@@ -41,7 +53,6 @@ class MatrixGameEnvironment(rllib.env.MultiAgentEnv):
 
         self.agents = env_config.get('agents', [str(index) for index in range(self.number_of_agents)])
 
-        # self.observation_space = MultiDiscrete((self.number_of_actions, ) * self.number_of_agents)
         self.observation_space = gym.spaces.Box(low=0.0, high=self.number_of_actions - 1,
                                                 shape=(self.number_of_agents,), dtype=np.float32)
         self.action_space = gym.spaces.Discrete(self.number_of_actions)
@@ -51,20 +62,20 @@ class MatrixGameEnvironment(rllib.env.MultiAgentEnv):
 
     def step(self, actions):
         actions = tuple(actions.values())
-        rewards = {id: self.payoffs[actions][index] for index, id in enumerate(self.agents)}
+        rewards = {agent_id: self.payoffs[actions][index] for index, agent_id in enumerate(self.agents)}
         self.state = np.array(actions)
         self.current_step += 1
 
-        return {id: self._get_observation(id) for id in self.agents}, rewards, {
+        return {agent_id: self._get_observation(agent_id) for agent_id in self.agents}, rewards, {
             '__all__': self.current_step >= self.episode_length}, {}
 
-    def reset(self):
+    def reset(self, *, seed: Optional[int] = None, options: Optional[dict] = None):
         self.state = np.random.randint(0, self.number_of_actions, size=self.number_of_agents)
         self.current_step = 0
 
-        return {id: self._get_observation(id) for id in self.agents}
+        return {agent_id: self._get_observation(agent_id) for agent_id in self.agents}
 
-    def _get_observation(self, id):
+    def _get_observation(self, agent_id):
         return self.state
 
 
@@ -74,8 +85,13 @@ class NormalGameEnvironment(rllib.env.MultiAgentEnv):
     agents. Usually, an episode only consists of a single step.
     """
 
-    def __init__(self, env_config={}):
+    def __init__(self, env_config=None):
         assert 'utilities' in env_config
+        super().__init__()
+
+        if env_config is None:
+            env_config = {}
+
         self.utilities = env_config['utilities']
         self.agents = self.utilities.keys()
         self.number_of_agents = len(self.agents)
@@ -92,17 +108,17 @@ class NormalGameEnvironment(rllib.env.MultiAgentEnv):
 
     def step(self, actions):
         actions = actions.values()
-        rewards = {id: self.utilities[id](*actions) for id in self.agents}
+        rewards = {agent_id: self.utilities[id](*actions) for agent_id in self.agents}
         self.current_step += 1
 
-        return {id: self._get_observation(id) for id in self.agents}, rewards, {
+        return {agent_id: self._get_observation(agent_id) for agent_id in self.agents}, rewards, {
             '__all__': self.current_step >= self.episode_length}, {}
 
-    def reset(self):
+    def reset(self, *, seed: Optional[int] = None, options: Optional[dict] = None):
         self.state = np.array([0.0])
         self.current_step = 0
 
-        return {id: self._get_observation(id) for id in self.agents}
+        return {agent_id: self._get_observation(agent_id) for agent_id in self.agents}
 
-    def _get_observation(self, id):
+    def _get_observation(self, agent_id):
         return self.state
