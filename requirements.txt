@@ -3,3 +3,4 @@ numpy
 gymnasium
 pettingzoo
 tensorflow
+shapely
