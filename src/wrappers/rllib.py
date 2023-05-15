@@ -13,12 +13,13 @@ class NextAction(Enum):
 
 class UniformlyRestrictedEnvironment(rllib.env.MultiAgentEnv):
     def __init__(self, env_config=None):
-        assert 'env' in env_config, 'You have to provide an environment!'
-        assert 'governance_action_space' in env_config, 'You must specify the governance action space'
-        super().__init__()
-
         if env_config is None:
             env_config = {}
+
+        assert 'env' in env_config, 'You have to provide an environment!'
+        assert 'governance_action_space' in env_config, 'You must specify the restrictors action space'
+        super().__init__()
+
         env = env_config['env']
 
         if inspect.isclass(env):
@@ -33,6 +34,7 @@ class UniformlyRestrictedEnvironment(rllib.env.MultiAgentEnv):
         self.governance_observation = None
 
         self.governance_reward_fn = env_config.get('governance_reward_fn', None)
+        self.governance_observation_fn = env_config.get('governance_observation_fn', None)
 
         self.observation_space = gym.spaces.Dict({
             'observation': self.env.observation_space,
@@ -69,20 +71,21 @@ class UniformlyRestrictedEnvironment(rllib.env.MultiAgentEnv):
         return {'gov': self._get_governance_observation()}
 
     def _get_governance_observation(self):
-        return self.governance_observation_space.sample()
+        return self.governance_observation_fn(self) if self.governance_observation_fn else self.observations
 
     def _get_governance_reward(self):
-        return self.governance_reward_fn(self._get_governance_observation()) if \
+        return self.governance_reward_fn(self) if \
             self.governance_reward_fn else sum(self.rewards.values())
 
 
 class IndividuallyRestrictedEnvironment(rllib.env.MultiAgentEnv):
     def __init__(self, env_config=None):
+        if env_config is None:
+            env_config = {}
+
         assert 'env' in env_config, 'You have to provide an environment!'
         super().__init__()
 
-        if env_config is None:
-            env_config = {}
         env = env_config['env']
 
         if inspect.isclass(env):
@@ -97,6 +100,7 @@ class IndividuallyRestrictedEnvironment(rllib.env.MultiAgentEnv):
         self.governance_observation = None
 
         self.governance_reward_fn = env_config.get('governance_reward_fn', None)
+        self.governance_observation_fn = env_config.get('governance_observation_fn', None)
 
         assert isinstance(self.env.action_space, gym.spaces.Discrete), \
             'UniformDiscreteGovernanceWrapper can only wrap environments with a discrete action space!'
@@ -119,8 +123,8 @@ class IndividuallyRestrictedEnvironment(rllib.env.MultiAgentEnv):
             self.next_action = NextAction.AGENTS
 
             observations = {agent_id: {
-                'observation': self.observations[id],
-                'allowed_actions': allowed_actions[id]
+                'observation': self.observations[agent_id],
+                'allowed_actions': allowed_actions[agent_id]
             } for agent_id in self.env.agents}
 
             return observations, self.rewards, {'__all__': False}, {}
@@ -138,7 +142,7 @@ class IndividuallyRestrictedEnvironment(rllib.env.MultiAgentEnv):
         return {'gov': self._get_governance_observation()}
 
     def _get_governance_observation(self):
-        return self.governance_observation_space.sample()
+        return self.governance_observation_fn(self) if self.governance_observation_fn else self.observations
 
     def _get_governance_reward(self):
         return self.governance_reward_fn(self._get_governance_observation()) if \

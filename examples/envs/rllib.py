@@ -191,7 +191,7 @@ class Obstacle:
         coordinates: Polygon coordinates for the shape of the obstacle
     """
 
-    def __init__(self, coordinates: list, step_size):
+    def __init__(self, coordinates: list):
         self.coordinates = np.array([[
             Decimal(repr(coordinate[0])), Decimal(repr(coordinate[1]))
         ] for coordinate in coordinates])
@@ -218,6 +218,9 @@ class Obstacle:
             shapely geometry object
         """
         return Polygon(self.coordinates).buffer(radius)
+
+    def __repr__(self):
+        return f'<{self.coordinates}>'
 
 
 class NavigationEnvironment(rllib.env.MultiAgentEnv):
@@ -330,6 +333,18 @@ class NavigationEnvironment(rllib.env.MultiAgentEnv):
                     Decimal(repr(self.current_step)) * self.TIMESTEP_PENALTY_COEFFICIENT)
         return float(reward)
 
+    def detect_collision(self):
+        """ Checks if the agent collided with the border
+
+        Returns:
+            violation (bool)
+        """
+        # Check if agent is on the map and not collided with the boundaries
+        if not self.map.contains(self.agent.geometric_representation()) or self.agent.radius - Decimal(
+                repr(self.map.exterior.distance(Point(self.agent.x, self.agent.y)))) > Decimal(0.0):
+            return True
+        return False
+
     def step(self, action: dict):
         """ Perform an environment iteration including moving the agent and obstacles.
 
@@ -349,14 +364,14 @@ class NavigationEnvironment(rllib.env.MultiAgentEnv):
 
         self.agent.step(step_direction, self.DT)
         self.agent.last_action = action
+        self.agent.collided = self.detect_collision()
         self.agent.set_distance_target(self.distance_to_target())
         self.last_reward = self.get_reward()
         self.trajectory.append([float(self.agent.x),
                                 float(self.agent.y)])
         self.current_step += 1
 
-        observation = {'agent': self._get_agent_observation(),
-                       'gov': self._get_governance_observation()}
+        observation = {'agent': self._get_agent_observation()}
         done = self.agent.collided or (self.agent.distance_target <= self.GOAL_RADIUS)
         truncated = self.current_step >= self.STEPS_PER_EPISODE
         info = {
@@ -377,8 +392,7 @@ class NavigationEnvironment(rllib.env.MultiAgentEnv):
         self.agent = Agent(**self.AGENT_SETUP)
         self.current_step = 0
 
-        return {'agent': self._get_agent_observation(),
-                'gov': self._get_governance_observation()}
+        return {'agent': self._get_agent_observation()}
 
     def _get_agent_observation(self):
         return {'location': np.array([self.agent.x, self.agent.y], dtype=np.float32),
@@ -386,6 +400,3 @@ class NavigationEnvironment(rllib.env.MultiAgentEnv):
                 'target_angle': np.array([self.angle_to_target()], dtype=np.float32),
                 'target_distance': np.array([self.agent.distance_target], dtype=np.float32),
                 'current_step': np.array([self.current_step], dtype=np.float32)}
-
-    def _get_governance_observation(self):
-        return {}

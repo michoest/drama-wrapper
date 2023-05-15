@@ -1,7 +1,7 @@
 import inspect
 
 
-def test_environment(env, *, env_config=None, num_steps=20, num_episodes=5, individual: bool = False):
+def test_environment(env, restrictor=None, *, env_config=None, num_steps=20, num_episodes=5, individual: bool = False):
     """Creates an environment with the given configuration, and run it for a number of
     steps/episodes, using random agent actions and each step.
 
@@ -27,12 +27,14 @@ def test_environment(env, *, env_config=None, num_steps=20, num_episodes=5, indi
     while True:
         if individual:
             actions = {
-                id: {agent: env.governance_action_space.sample() for agent in env.env.agents
-                     } if id == 'gov' else env.action_space.sample() for id in obs
+                agent_id: {agent: env.governance_action_space.sample() for agent in env.env.agents  # TODO Compute actions with restrictor
+                     } if agent_id == 'gov' else env.action_space.sample() for agent_id in obs
             }
         else:
             actions = {
-                id: env.governance_action_space.sample() if id == 'gov' else env.action_space.sample() for id in obs
+                agent_id: restrictor.compute_actions(obs['gov'])
+                if restrictor and 'gov' in obs else env.governance_action_space.sample()
+                if agent_id == 'gov' else env.action_space.sample() for agent_id in obs
             }
         print(f'Actions: {actions}')
         obs, rewards, done, info = env.step(actions)

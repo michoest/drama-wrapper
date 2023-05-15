@@ -5,7 +5,7 @@ import numpy as np
 
 
 class ContinuousActionSpace(gym.spaces.Box):
-    """ Node in the AVL tree which represents a valid interval """
+    """ Parent class for variable continuous action spaces """
 
     def __init__(self, low: SupportsFloat, high: SupportsFloat,
                  dtype: Union[type[np.floating[Any]], type[np.integer[Any]]] = np.float32,
