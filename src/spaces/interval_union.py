@@ -32,7 +32,7 @@ class Node(object):
         return self.__str__()
 
 
-class IntervalUnionTree(ContinuousActionSpace):
+class IntervalUnion(ContinuousActionSpace):
     """ Interval Action Space as AVL tree """
 
     root_tree = None
