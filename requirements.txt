@@ -1,7 +1,5 @@
-ray==2.4.0
-numpy
-gymnasium
 pettingzoo
-shapely
 torch
-tensorflow-probability
+gymnasium
+shapely
+numpy
