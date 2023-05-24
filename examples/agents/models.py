@@ -2,10 +2,10 @@ from typing import Optional, List
 
 import numpy as np
 import ray
-from gymnasium.spaces import Box
+from gymnasium import Space
+from gymnasium.spaces import Box, Dict
 from ray import rllib
 import tensorflow as tf
-import gymnasium as gym
 from ray.rllib.algorithms.ddpg.ddpg_torch_model import DDPGTorchModel
 from ray.rllib.utils import try_import_torch
 from ray.rllib.utils.typing import ModelConfigDict, TensorType
@@ -17,7 +17,7 @@ class DiscreteRestrictionAwareAgentModel(rllib.models.tf.fcnet.FullyConnectedNet
     def __init__(self, obs_space, action_space, num_outputs, model_config, name, *args, **kwargs):
         # Original observation space consists of two components: Real observation and allowed actions
         original_obs_space = getattr(obs_space, 'original_space', obs_space)
-        assert (isinstance(original_obs_space, gym.spaces.Dict) and
+        assert (isinstance(original_obs_space, Dict) and
                 'allowed_actions' in original_obs_space.spaces and
                 'observation' in original_obs_space.spaces)
         super(DiscreteRestrictionAwareAgentModel, self).__init__(obs_space, action_space, num_outputs, model_config,
@@ -88,8 +88,8 @@ class MPSTD3Model(DDPGTorchModel):
 
     def __init__(
             self,
-            obs_space: gym.spaces.Space,
-            action_space: gym.spaces.Space,
+            obs_space: Space,
+            action_space: Space,
             num_outputs: int,
             model_config: ModelConfigDict,
             name: str,

@@ -1,6 +1,7 @@
 from typing import Tuple, Type, List
 
 import numpy as np
+from gymnasium import Space
 from gymnasium.spaces import Box
 from ray.rllib import SampleBatch
 from ray.rllib.algorithms.ddpg.ddpg_torch_policy import DDPGTorchPolicy
@@ -13,8 +14,6 @@ from ray.rllib.utils.exploration import ParameterNoise
 from ray.rllib.utils.torch_utils import huber_loss, l2_loss
 from ray.rllib.utils.typing import AlgorithmConfigDict, TensorType
 
-import gymnasium as gym
-
 from examples.agents.distributions import TorchDynamicIntervals
 from examples.agents.models import MPSTD3Model
 
@@ -25,14 +24,17 @@ class MPSTD3Policy(DDPGTorchPolicy):
 
     def __init__(
             self,
-            observation_space: gym.spaces.Space,
-            action_space: gym.spaces.Space,
+            observation_space: Space,
+            action_space: Space,
             config: AlgorithmConfigDict
     ):
         # Define DDPG observation space of shape [observation] out of original [allowed_actions + observation]
+        self.target_model = None
+
         orig_space = getattr(observation_space, "original_space", observation_space)
         self.allowed_actions_len = orig_space['allowed_actions'].max_len
         only_observation_shape = (observation_space.shape[0] - self.allowed_actions_len * 2 + 1,)
+        print(only_observation_shape)
         self.internal_observation_space = Box(low=-np.inf, high=np.inf, shape=only_observation_shape)
 
         DDPGTorchPolicy.__init__(
@@ -71,6 +73,9 @@ class MPSTD3Policy(DDPGTorchPolicy):
         }
 
         model = ModelCatalog.get_model_v2(**config)
+
+        config['name'] = 'target_model'
+        self.target_model = ModelCatalog.get_model_v2(**config)
 
         return model, TorchDynamicIntervals
 

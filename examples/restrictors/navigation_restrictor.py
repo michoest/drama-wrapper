@@ -2,11 +2,15 @@ from decimal import Decimal
 
 import numpy as np
 from ray.rllib import Policy
+from ray.rllib.models.modelv2 import restore_original_dimensions
+from ray.rllib.utils import try_import_torch
 from shapely import Polygon, Point
 
 from examples.envs.rllib import Obstacle, Agent
 from examples.restrictors.helpers import project_intervals_into_action_space, inverse_space, \
     get_restrictions_for_polygon, midpoint
+
+torch, _ = try_import_torch()
 
 MULTI_GEOM_TYPES = ['MultiPolygon', 'MultiLineString', 'GeometryCollection', 'MultiPoint']
 NO_EXTERIOR_TYPES = ['Point', 'LineString']
@@ -28,6 +32,8 @@ class NavigationRestrictor(Policy):
     def __init__(self, observation_space, action_space, governance_config):
         if governance_config is None:
             governance_config = {}
+        print('hi')
+        print(observation_space)
         super().__init__(observation_space=observation_space, action_space=action_space,
                          config=governance_config)
 
@@ -65,16 +71,22 @@ class NavigationRestrictor(Policy):
                         info_batch=None,
                         episodes=None,
                         **kwargs):
+        print('L')
+        obs_batch = restore_original_dimensions(obs_batch, self.observation_space, 'numpy')
         actions = []
-        for obs in obs_batch:
-            if obs['step'] == 0:
-                self.generate_obstacles(obs['map'][0], obs['map'][1])
-                self.map_collision_area = Polygon([(0.0, 0.0), (obs['map'][1], 0.0), (obs['map'][1], obs['map'][0]),
-                                                   (0.0, obs['map'][0])]).exterior.buffer(obs['step_radius'][0])
+        for i in range(len(obs_batch['step'])):
+            if obs_batch['step'][i][0] == 0:
+                self.generate_obstacles(obs_batch['map'][i][0], obs_batch['map'][i][1])
+                self.map_collision_area = Polygon([(0.0, 0.0), (obs_batch['map'][i][1], 0.0),
+                                                   (obs_batch['map'][i][1], obs_batch['map'][i][0]),
+                                                   (0.0, obs_batch['map'][i][0])]).exterior.buffer(
+                    obs_batch['step_radius'][i][0])
 
-            agent = Agent(x=obs['location'][0], y=obs['location'][1], perspective=obs['perspective'][0],
-                          radius=obs['step_radius'][0], step_size=obs['step_size'][0])
-            step_circle = Point(obs['location'][0], obs['location'][1]).buffer(float(agent.step_size) * obs['dt'][0])
+            agent = Agent(x=obs_batch['location'][i][0], y=obs_batch['location'][i][1],
+                          perspective=obs_batch['perspective'][i][0],
+                          radius=obs_batch['step_radius'][i][0], step_size=obs_batch['step_size'][i][0])
+            step_circle = Point(obs_batch['location'][i][0], obs_batch['location'][i][1]).buffer(
+                float(agent.step_size) * obs_batch['dt'][i][0])
             restrictions = []
 
             for obstacle in self.obstacles + [self.map_collision_area]:
@@ -85,7 +97,8 @@ class NavigationRestrictor(Policy):
                     Point(float(agent.x), float(agent.y))) or obstacle.boundary.contains(
                     Point(float(agent.x), float(agent.y)))
 
-                obstacle_step_circle_intersection = step_circle.intersection(obstacle) if not is_in_collision_area else (
+                obstacle_step_circle_intersection = step_circle.intersection(
+                    obstacle) if not is_in_collision_area else (
                     step_circle.boundary.difference(obstacle))
 
                 # If intersection consists of multiple parts, iterate through them
@@ -138,7 +151,7 @@ class NavigationRestrictor(Policy):
             restrictions = [restriction for restriction in restrictions if restriction[0] != restriction[1]]
 
             # Build allowed action space from restrictions
-            allowed_action_space = [[-obs['action_range'][0] / 2, obs['action_range'][0] / 2]]
+            allowed_action_space = [[-obs_batch['action_range'][i][0] / 2, obs_batch['action_range'][i][0] / 2]]
             for restriction in restrictions:
                 for index, allowed_subset in enumerate(allowed_action_space):
                     if restriction[0] <= restriction[1]:
@@ -167,9 +180,12 @@ class NavigationRestrictor(Policy):
                 [subset for subset in allowed_action_space if subset[0] != np.inf and subset[0] != subset[1]])
 
             if len(allowed_action_space) > 0:
-                allowed_action_space[allowed_action_space[:, 0] != -obs['action_range'][0] / 2, 0] += self.SAFETY_ANGLE
-                allowed_action_space[allowed_action_space[:, 1] != obs['action_range'][0] / 2, 1] -= self.SAFETY_ANGLE
+                allowed_action_space[
+                    allowed_action_space[:, 0] != -obs_batch['action_range'][i][0] / 2, 0] += self.SAFETY_ANGLE
+                allowed_action_space[
+                    allowed_action_space[:, 1] != obs_batch['action_range'][i][0] / 2, 1] -= self.SAFETY_ANGLE
 
+            print('hii')
             actions.append([[float(subset[0]), float(subset[1])] for subset in allowed_action_space
                             if subset[0] < subset[1]])
 

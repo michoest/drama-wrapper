@@ -1,11 +1,10 @@
 from typing import SupportsFloat, Union, Optional, Any
 
 import numpy as np
-
-from src.spaces.continuous import ContinuousActionSpace
+from gymnasium.spaces import Box
+from ray.rllib.utils.spaces.repeated import Repeated
 
 from decimal import *
-from random import uniform
 
 
 class Node(object):
@@ -32,21 +31,25 @@ class Node(object):
         return self.__str__()
 
 
-class IntervalUnion(ContinuousActionSpace):
+class IntervalUnion(Repeated):
     """ Interval Action Space as AVL tree """
 
     root_tree = None
     size: Decimal = 0
     draw = None
+    shape = (2,)
+    _shape = None
 
-    def __init__(self, low: SupportsFloat, high: SupportsFloat,
+    def __init__(self, low: SupportsFloat, high: SupportsFloat, max_len=20,
                  dtype: Union[type[np.floating[Any]], type[np.integer[Any]]] = np.float32,
                  seed: Optional[Union[int, np.random.Generator]] = None) -> None:
-        super().__init__(low, high, dtype, seed)
+        super().__init__(Box(low=low, high=high, dtype=dtype, seed=seed, shape=(2,)), max_len)
         getcontext().prec = 28
 
-        self.root_tree = Node(self.low[0], self.high[0])
-        self.size = Decimal(f'{self.high[0]}') - Decimal(f'{self.low[0]}')
+        self.root_tree = Node(self.child_space.low[0], self.child_space.high[0])
+        self.size = Decimal(f'{self.child_space.high[0]}') - Decimal(f'{self.child_space.low[0]}')
+        self.shape = (2,)
+        self._shape = (2,)
 
     def __contains__(self, item):
         return self.contains(item)
@@ -281,37 +284,6 @@ class IntervalUnion(ContinuousActionSpace):
         self.root_tree = root
         return root
 
-    def sample(self, root: Node = 'root') -> float:
-        """ Sample a random action from a uniform distribution over the action space
-
-        Args:
-            root: Root node of the action space, default is 'root'
-
-        Returns:
-            Sampled action as a float
-        """
-        if root == 'root':
-            root = self.root_tree
-
-        if root is None:
-            raise Exception('Empty Action Space')
-
-        if self.draw is None:
-            self.draw = Decimal(f'{uniform(0.0, float(self.size))}')
-
-        self.draw -= root.y - root.x
-        if self.draw > 0:
-            result = None
-            if root.l is not None:
-                result = self.sample(root.l)
-            if not result and root.r is not None:
-                result = self.sample(root.r)
-            return result
-        else:
-            result = float(root.y + self.draw)
-            self.draw = None
-            return result
-
     def remove(self, x, y, root: Node = 'root', adjust_size: bool = True):
         """ Removes an interval from the action space
 
@@ -508,8 +480,8 @@ class IntervalUnion(ContinuousActionSpace):
     def reset(self):
         """ Resets the action space to the unrestricted state
         """
-        self.root_tree = Node(self.low[0], self.high[0])
-        self.size = Decimal(self.high[0]) - Decimal(self.low[0])
+        self.root_tree = Node(self.child_space.low[0], self.child_space.high[0])
+        self.size = Decimal(self.child_space.high[0]) - Decimal(self.child_space.low[0])
 
     def __str__(self):
         return f'<IntervalUnion>'

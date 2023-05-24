@@ -2,10 +2,10 @@ import random
 from decimal import Decimal, getcontext
 from typing import Optional, Any
 
-from gymnasium.spaces import Dict, Box
+import gymnasium
+from gymnasium.spaces import Dict, Box, Discrete
 from ray import rllib
 from ray.rllib.utils import try_import_torch
-import gymnasium as gym
 import numpy as np
 from shapely import Point, Polygon
 
@@ -62,9 +62,9 @@ class MatrixGameEnvironment(rllib.env.MultiAgentEnv):
 
         self.agents = env_config.get('agents', [str(index) for index in range(self.number_of_agents)])
 
-        self.observation_space = gym.spaces.Box(low=0.0, high=self.number_of_actions - 1,
-                                                shape=(self.number_of_agents,), dtype=np.float32)
-        self.action_space = gym.spaces.Discrete(self.number_of_actions)
+        self.observation_space = Box(low=0.0, high=self.number_of_actions - 1,
+                                     shape=(self.number_of_agents,), dtype=np.float32)
+        self.action_space = Discrete(self.number_of_actions)
 
         self.state = None
         self.current_step = None
@@ -110,7 +110,7 @@ class NormalGameEnvironment(rllib.env.MultiAgentEnv):
 
         self.episode_length = env_config.get('episode_length', 1)
 
-        self.observation_space = gym.spaces.Box(low=0.0, high=0.0, shape=(1,), dtype=np.float32)
+        self.observation_space = Box(low=0.0, high=0.0, shape=(1,), dtype=np.float32)
 
         self.state = None
         self.current_step = None
@@ -223,7 +223,7 @@ class Obstacle:
         return f'<{self.coordinates}>'
 
 
-class NavigationEnvironment(rllib.env.MultiAgentEnv):
+class NavigationEnvironment(gymnasium.Env):
 
     def __init__(self, env_config):
         assert 'STEPS_PER_EPISODE' in env_config
@@ -239,7 +239,6 @@ class NavigationEnvironment(rllib.env.MultiAgentEnv):
         assert 'WIDTH' in env_config['MAP']
         assert 'AGENT' in env_config['MAP']
         assert 'GOAL' in env_config['MAP']
-        super().__init__()
 
         self.STEPS_PER_EPISODE = env_config['STEPS_PER_EPISODE']
         self.ACTION_RANGE = Decimal(repr(env_config["ACTION_RANGE"]))
@@ -273,14 +272,16 @@ class NavigationEnvironment(rllib.env.MultiAgentEnv):
         self.observation_space = Dict({
             'location': Box(low=-2.0, high=np.max([self.WIDTH, self.HEIGHT]) + 2.0, shape=(2,),
                             dtype=np.float32),
-            'perspective': Box(low=0.0, high=360.0, shape=(1,), dtype=np.float32),
-            'target_angle': Box(low=0.0, high=360.0, shape=(1,), dtype=np.float32),
-            'target_distance': Box(low=0.0, high=np.sqrt(self.WIDTH ** 2 + self.HEIGHT ** 2),
+            'perspective': Box(low=-1.0, high=360.0, shape=(1,), dtype=np.float32),
+            'target_angle': Box(low=-1.0, high=360.0, shape=(1,), dtype=np.float32),
+            'target_distance': Box(low=-1.0, high=np.sqrt(self.WIDTH ** 2 + self.HEIGHT ** 2),
                                    shape=(1,), dtype=np.float32),
-            'current_step': Box(low=0.0, high=self.STEPS_PER_EPISODE, shape=(1,), dtype=np.float32)
+            'current_step': Box(low=-1.0, high=self.STEPS_PER_EPISODE, shape=(1,), dtype=np.float32)
         })
         self.action_space = Box(low=float(-self.ACTION_RANGE / 2), high=float(self.ACTION_RANGE / 2), shape=(1,),
                                 dtype=np.float32)
+
+        super().__init__()
 
     def seed(self, seed: int = None):
         """ Set the seed of the environment
@@ -374,12 +375,8 @@ class NavigationEnvironment(rllib.env.MultiAgentEnv):
         observation = {'agent': self._get_agent_observation()}
         done = self.agent.collided or (self.agent.distance_target <= self.GOAL_RADIUS)
         truncated = self.current_step >= self.STEPS_PER_EPISODE
-        info = {
-            'goal_distance': float(self.agent.distance_target),
-            'solved': self.agent.distance_target <= Decimal(f'{self.GOAL_RADIUS}')
-        }
 
-        return observation, {'agent': self.last_reward}, {'__all__': done or truncated}, info
+        return observation, {'agent': self.last_reward}, {'__all__': done}, {'__all__': truncated}, {}
 
     def reset(self, *, seed: int | None = None, options: dict[str, Any] | None = None):
         """ Resets and loads the structure of the map again
@@ -392,7 +389,6 @@ class NavigationEnvironment(rllib.env.MultiAgentEnv):
         self.agent = Agent(**self.AGENT_SETUP)
         self.current_step = 0
 
-        return {'agent': self._get_agent_observation()}
 
     def _get_agent_observation(self):
         return {'location': np.array([self.agent.x, self.agent.y], dtype=np.float32),

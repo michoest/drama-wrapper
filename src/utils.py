@@ -19,7 +19,7 @@ def test_environment(env, restrictor=None, *, env_config=None, num_steps=20, num
 
     print(f'Testing {type(env)}...')
 
-    obs = env.reset()
+    obs, info = env.reset()
     print(f'Reset: {obs}')
 
     current_step = 0
@@ -27,22 +27,22 @@ def test_environment(env, restrictor=None, *, env_config=None, num_steps=20, num
     while True:
         if individual:
             actions = {
-                agent_id: {agent: env.governance_action_space.sample() for agent in env.env.agents  # TODO Compute actions with restrictor
-                     } if agent_id == 'gov' else env.action_space.sample() for agent_id in obs
+                agent_id: {agent: env.action_space['gov'].sample() for agent in env.env.agents
+                     } if agent_id == 'gov' else env.action_space['agent'].sample() for agent_id in obs
             }
         else:
             actions = {
-                agent_id: restrictor.compute_actions(obs['gov'])
-                if restrictor and 'gov' in obs else env.governance_action_space.sample()
-                if agent_id == 'gov' else env.action_space.sample() for agent_id in obs
+                agent_id: restrictor.compute_actions([obs['gov']])
+                if restrictor and 'gov' in obs else env.action_space['gov'].sample()
+                if agent_id == 'gov' else env.action_space['agent'].sample() for agent_id in obs
             }
         print(f'Actions: {actions}')
-        obs, rewards, done, info = env.step(actions)
+        obs, rewards, done, truncated, info = env.step(actions)
         current_step += 1
-        print(f'Step:  {obs}, {rewards}, {done}')
-        if done['__all__']:
+        print(f'Step:  {obs}, {rewards}, {done}, {truncated}')
+        if truncated['__all__']:
             current_episode += 1
-            obs = env.reset()
+            obs, info = env.reset()
             print(f'Reset: {obs}')
 
         if num_steps is not None and current_step >= num_steps:
