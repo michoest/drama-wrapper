@@ -3,14 +3,14 @@ import inspect
 
 def test_environment(env, *, env_config={}, num_steps=20, num_episodes=5, individual: bool = False):
   """Creates an environment with the given configuration, and run it for a number of 
-  steps/episodes, using random agent actions and each step.
+  steps/episodes, using random agent actions at each step.
 
   Args:
     env: The environment class or object which is tested.
     env_config: The config dict for the environment.
     num_steps: The maximum number of steps for the test.
     num_steps: The maximum number of episodes for the test. If both num_steps 
-    and num_episodes are Null, the test will run infinitely!
+    and num_episodes are `None`, the test will run infinitely!
   """
   if inspect.isclass(env):
     env = env(env_config=env_config)
