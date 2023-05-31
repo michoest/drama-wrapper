@@ -1,33 +1,43 @@
 import functools
-from copy import copy
 
-import numpy as np
 from gymnasium.spaces import Dict
 from pettingzoo.utils import BaseWrapper
 
 
 class RestrictionWrapper(BaseWrapper):
-    """ Wrapper to extend the environment with a restrictor agent.
+    """Wrapper to extend the environment with a restrictor agent.
 
-     Extended Agent-Environment Cycle:
-         Reset() -> Restrictor
-         Step() -> Agent
-         Step() -> Restrictor
-         ...
-     """
+    Extended Agent-Environment Cycle:
+        Reset() -> Restrictor
+        Step() -> Agent
+        Step() -> Restrictor
+        ...
+    """
 
-    def __init__(self, env, restrictor_observation_space=None, restrictor_action_space=None, *,
-                 restrictor_reward_fn=None, preprocess_restrictor_observation_fn=None,
-                 restrictor_key='restrictor_0', restriction_key='restriction', 
-                 observation_key='observation'):
+    def __init__(
+        self,
+        env,
+        restrictor_observation_space=None,
+        restrictor_action_space=None,
+        *,
+        restrictor_reward_fn=None,
+        preprocess_restrictor_observation_fn=None,
+        restrictor_key="restrictor_0",
+        restriction_key="restriction",
+        observation_key="observation"
+    ):
         super().__init__(env)
 
         # TODO: Decide how to handle observation and action space of the restrictor
         self.restrictor_observation_space = restrictor_observation_space
         self.restrictor_action_space = restrictor_action_space
 
-        self.restrictor_reward_fn = restrictor_reward_fn or (lambda env, rewards: sum(rewards.values()))
-        self.preprocess_restrictor_observation_fn = preprocess_restrictor_observation_fn or (lambda env: env.state())
+        self.restrictor_reward_fn = restrictor_reward_fn or (
+            lambda env, rewards: sum(rewards.values())
+        )
+        self.preprocess_restrictor_observation_fn = (
+            preprocess_restrictor_observation_fn or (lambda env: env.state())
+        )
 
         self.restrictor_key = restrictor_key
         self.restriction_key = restriction_key
@@ -43,10 +53,12 @@ class RestrictionWrapper(BaseWrapper):
         if agent == self.restrictor_key:
             return self.restrictor_observation_space
         else:
-            return Dict({
-                self.observation_key: self.env.observation_space(agent),
-                self.restriction_key: self.restrictor_action_space
-            })
+            return Dict(
+                {
+                    self.observation_key: self.env.observation_space(agent),
+                    self.restriction_key: self.restrictor_action_space,
+                }
+            )
 
     @functools.lru_cache(maxsize=None)
     def action_space(self, agent):
@@ -64,7 +76,10 @@ class RestrictionWrapper(BaseWrapper):
         self.truncations = {**self.env.truncations, self.restrictor_key: False}
         self.infos = {**self.env.infos, self.restrictor_key: {}}
         self.agents = self.env.agents + [self.restrictor_key]
-        self._cumulative_rewards = {**self.env._cumulative_rewards, self.restrictor_key: 0.0}
+        self._cumulative_rewards = {
+            **self.env._cumulative_rewards,
+            self.restrictor_key: 0.0,
+        }
 
         self.restrictions = {agent: None for agent in self.env.agents}
 
@@ -73,7 +88,8 @@ class RestrictionWrapper(BaseWrapper):
 
     def step(self, action):
         if self.agent_selection == self.restrictor_key:
-            # If the action was taken by the restrictor, check if it was terminated last step
+            # If the action was taken by the restrictor, check if it was terminated
+            # last step
             if self.terminations[self.agent_selection]:
                 self._was_dead_step(action)
                 self.agent_selection = self.env.agent_selection
@@ -85,18 +101,35 @@ class RestrictionWrapper(BaseWrapper):
             # Switch to the next agent of the original environment
             self.agent_selection = self.env.agent_selection
         else:
-            # If the action was taken by an agent, execute it in the original environment
+            # If the action was taken by an agent, execute it in the original
+            # environment
             self.env.step(action)
 
             # Update properties
             self.agents = [self.restrictor_key] + self.env.agents
-            self.rewards = {**self.env.rewards, self.restrictor_key: self.restrictor_reward_fn(self.env, self.rewards)}
-            self.terminations = {**self.env.terminations, self.restrictor_key: all(self.env.terminations[agent] or self.env.truncations[agent] for agent in self.env.agents)}
+            self.rewards = {
+                **self.env.rewards,
+                self.restrictor_key: self.restrictor_reward_fn(self.env, self.rewards),
+            }
+            self.terminations = {
+                **self.env.terminations,
+                self.restrictor_key: all(
+                    self.env.terminations[agent] or self.env.truncations[agent]
+                    for agent in self.env.agents
+                ),
+            }
             self.truncations = {**self.env.truncations, self.restrictor_key: False}
             self.infos = {**self.env.infos, self.restrictor_key: {}}
-            self._cumulative_rewards = {**self.env._cumulative_rewards, self.restrictor_key: self._cumulative_rewards[self.restrictor_key] + self.rewards[self.restrictor_key]}
+            self._cumulative_rewards = {
+                **self.env._cumulative_rewards,
+                self.restrictor_key: self._cumulative_rewards[self.restrictor_key]
+                + self.rewards[self.restrictor_key],
+            }
 
-            if self.env.agents and all(self.env.terminations[agent] or self.env.truncations[agent] for agent in self.env.agents):
+            if self.env.agents and all(
+                self.env.terminations[agent] or self.env.truncations[agent]
+                for agent in self.env.agents
+            ):
                 # If there are alive agents left, get the next restriction
                 self.agent_selection = self.env.agent_selection
             else:
@@ -109,5 +142,5 @@ class RestrictionWrapper(BaseWrapper):
         else:
             return {
                 self.observation_key: super().observe(agent),
-                self.restriction_key: self.restrictions[agent]
+                self.restriction_key: self.restrictions[agent],
             }
