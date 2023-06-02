@@ -1,17 +1,16 @@
-from typing import Optional, Set
+from typing import Optional, Set, Callable, Any
 
 from abc import ABC
 from random import random
 
 import numpy as np
+import gymnasium as gym
 
-import gymnasium
 
-
-class Restriction(ABC, gymnasium.Space):
+class Restriction(ABC, gym.Space):
     def __init__(
         self,
-        base_space: gymnasium.Space,
+        base_space: gym.Space,
         *,
         seed: int | np.random.Generator | None = None,
     ):
@@ -25,7 +24,7 @@ class Restriction(ABC, gymnasium.Space):
 class DiscreteRestriction(Restriction):
     def __init__(
         self,
-        base_space: gymnasium.spaces.Discrete,
+        base_space: gym.spaces.Discrete,
         *,
         seed: int | np.random.Generator | None = None,
     ):
@@ -35,7 +34,7 @@ class DiscreteRestriction(Restriction):
 class ContinuousRestriction(Restriction):
     def __init__(
         self,
-        base_space: gymnasium.spaces.Box,
+        base_space: gym.spaces.Box,
         *,
         seed: int | np.random.Generator | None = None,
     ):
@@ -45,7 +44,7 @@ class ContinuousRestriction(Restriction):
 class DiscreteSetRestriction(DiscreteRestriction):
     def __init__(
         self,
-        base_space: gymnasium.spaces.Discrete,
+        base_space: gym.spaces.Discrete,
         *,
         allowed_actions: Optional[Set[int]] = None,
         seed: int | np.random.Generator | None = None,
@@ -75,7 +74,7 @@ class DiscreteSetRestriction(DiscreteRestriction):
 class DiscreteVectorRestriction(DiscreteRestriction):
     def __init__(
         self,
-        base_space: gymnasium.spaces.Discrete,
+        base_space: gym.spaces.Discrete,
         *,
         allowed_actions: Optional[np.ndarray[bool]] = None,
         seed: int | np.random.Generator | None = None,
@@ -106,3 +105,30 @@ class DiscreteVectorRestriction(DiscreteRestriction):
 
 class IntervalUnionRestriction(ContinuousRestriction):
     pass
+
+
+class BucketSpaceRestriction(ContinuousRestriction):
+    pass
+
+
+class PredicateRestriction(Restriction):
+    def __init__(
+        self,
+        base_space: gym.Space,
+        *,
+        predicate: Optional[Callable[[Any], bool]] = None,
+        seed: int | np.random.Generator | None = None,
+    ):
+        super().__init__(base_space, seed=seed)
+
+        self.predicate = predicate if predicate is not None else (lambda x: True)
+
+    @property
+    def is_np_flattenable(self) -> bool:
+        return False
+
+    def sample(self) -> int:
+        raise NotImplementedError
+
+    def contains(self, x: Any) -> bool:
+        return self.base_space.contains(x) and self.predicate(x)
