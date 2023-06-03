@@ -60,45 +60,6 @@ class Agent:
         return Point(float(self.x), float(self.y)).buffer(float(self.radius))
 
 
-class Obstacle:
-    """ The obstacle representation
-
-    Args:
-        coordinates: Polygon coordinates for the shape of the obstacle
-    """
-
-    def __init__(self, coordinates: list):
-        self.coordinates = np.array([[
-            Decimal(repr(coordinate[0])), Decimal(repr(coordinate[1]))
-        ] for coordinate in coordinates])
-        self.x, self.y = self.geometric_representation().centroid.coords[0]
-        self.x = Decimal(repr(self.x))
-        self.y = Decimal(repr(self.y))
-        self.distance = Decimal(0.0)
-
-    def geometric_representation(self):
-        """ Returns the shapely geometry representation of the obstalce
-
-        Returns:
-            shapely geometry object
-        """
-        return Polygon(self.coordinates)
-
-    def collision_area(self, radius):
-        """ Returns the area which would lead to a collision when the agent enters it
-
-        Args:
-            radius: The radius of the agent
-
-        Returns:
-            shapely geometry object
-        """
-        return Polygon(self.coordinates).buffer(radius)
-
-    def __repr__(self):
-        return f'<{self.coordinates}>'
-
-
 class NavigationEnvironment(AECEnv):
 
     metadata = {
@@ -152,7 +113,7 @@ class NavigationEnvironment(AECEnv):
                    dtype=np.float32)
 
     def state(self):
-        return np.array([float(self.agent.x), float(self.agent.y)], dtype=np.float32)
+        return np.array([float(self.agent.x), float(self.agent.y), float(self.agent.perspective)], dtype=np.float32)
 
     def reset(self, seed=None, options=None):
         self.trajectory.append([float(self.agent.x),

@@ -51,6 +51,7 @@ class RPSEnvironment(AECEnv):
 
         These attributes should not be changed after initialization.
         """
+        super().__init__()
         self.possible_agents = [f'player_{r}' for r in range(2)]
         self.agent_name_mapping = dict(zip(self.possible_agents, list(range(len(self.possible_agents)))))
 

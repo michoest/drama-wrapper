@@ -25,6 +25,7 @@ class NFGEnvironment(AECEnv):
         render_mode=None,
         action_mapping=None,
     ):
+        super().__init__()
         self.possible_agents = list(utilities)
         self.observation_spaces = observation_spaces
         self.action_spaces = action_spaces
