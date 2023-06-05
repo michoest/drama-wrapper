@@ -281,15 +281,20 @@ class IntervalUnionRestriction(ContinuousRestriction):
             return (
                 self.last_interval_before_or_within(x, root.l)
                 if root.l is not None
-                else ((root.x, root.y), False)
+                else ((None, None), False)
             )
         else:
+            if root.r is not None:
+                interval, flag = self.last_interval_before_or_within(x, root.r)
+                if interval[0] is None:
+                    interval, flag = (root.x, root.y), False
+            else:
+                interval, flag = (root.x, root.y), False
+
             return (
-                self.last_interval_before_or_within(x, root.r)
+                (interval, flag)
                 if root.r is not None
                 else ((root.x, root.y), False)
-                if x < root.y
-                else ((None, None), False)
             )
 
     def first_interval_after_or_within(self, x, root: Node = "root"):
@@ -318,15 +323,20 @@ class IntervalUnionRestriction(ContinuousRestriction):
             return (
                 self.first_interval_after_or_within(x, root.r)
                 if root.r is not None
-                else ((root.x, root.y), False)
+                else ((None, None), False)
             )
         else:
+            if root.l is not None:
+                interval, flag = self.first_interval_after_or_within(x, root.l)
+                if interval[0] is None:
+                    interval, flag = (root.x, root.y), False
+            else:
+                interval, flag = (root.x, root.y), False
+
             return (
-                self.first_interval_after_or_within(x, root.l)
+                (interval, flag)
                 if root.l is not None
                 else ((root.x, root.y), False)
-                if x > root.x
-                else ((None, None), False)
             )
 
     def smallest_interval(self, root: Node = "root"):
