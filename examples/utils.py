@@ -2,7 +2,7 @@ def play(env, policies, *, max_iter=1_000, verbose=False):
     env.reset()
     env.render()
 
-    for agent in env.agent_iter():
+    for i, agent in zip(range(max_iter), env.agent_iter()):
         observation, reward, termination, truncation, info = env.last()
         if verbose:
             print(
