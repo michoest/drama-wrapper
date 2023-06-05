@@ -1,2 +1,18 @@
+# Pycharm
+.idea
+__pycache__
+
+# VS Code
+.vscode/
+
+# Spyder
+.spyproject/
+
+# Mac OS-specific storage files
+.DS_Store
+
+# Notebook Data
+.ipynb_checkpoints
+
 .venv
 **/__pycache__

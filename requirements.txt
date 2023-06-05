@@ -1,0 +1,5 @@
+pettingzoo
+torch
+gymnasium
+shapely
+numpy
