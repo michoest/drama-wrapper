@@ -658,7 +658,7 @@ class IntervalUnionRestriction(ContinuousRestriction):
         return ordered
 
     def __str__(self):
-        return f"{self.__class__.__name__}({self.intervals})"
+        return f"{self.__class__.__name__}({self.intervals()})"
 
     def __repr__(self):
         return self.__str__()

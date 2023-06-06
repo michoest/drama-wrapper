@@ -376,8 +376,8 @@ class NavigationRestrictor(Restrictor):
         for restriction in restrictions:
             if restriction[0] != restriction[1]:
                 if restriction[1] < restriction[0]:
-                    interval_union_restriction.remove(float(self.min_angle), float(restriction[1]))
-                    interval_union_restriction.remove(float(restriction[0]), float(self.max_angle))
+                    interval_union_restriction.remove(-180.0, float(restriction[1]))
+                    interval_union_restriction.remove(float(restriction[0]), 180.0)
                 else:
                     interval_union_restriction.remove(float(restriction[0]), float(restriction[1]))
         return interval_union_restriction

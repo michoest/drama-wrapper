@@ -43,6 +43,7 @@ def _flatten_interval_union_restriction(space: IntervalUnionActionSpace, x: Inte
     if clamp:
         intervals = intervals[:max_len]
     if pad:
-        return np.concatenate([intervals, np.full((max_len - intervals.shape[0], 2), pad_value)],
-                              axis=0, dtype=np.float32).flatten()
+        padding = np.full((max_len - intervals.shape[0], 2), pad_value)
+        return np.concatenate([intervals, padding], axis=0, dtype=np.float32).flatten() \
+            if len(intervals) > 0 else padding.flatten()
     return intervals.flatten()

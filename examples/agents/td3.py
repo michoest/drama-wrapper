@@ -11,21 +11,18 @@ device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 # GitHub: https://github.com/sfujim/TD3/blob/master/TD3.py
 # Authors: Scott Fujimoto, Herke van Hoof, David Meger
 
-
 class Actor(nn.Module):
     def __init__(self, state_dim, action_dim, max_action):
         super(Actor, self).__init__()
 
-        self.l1 = nn.Linear(state_dim, 256)
-        self.l2 = nn.Linear(256, 256)
-        self.l3 = nn.Linear(256, action_dim)
+        self.net = nn.Sequential(nn.Linear(state_dim, 256),
+                                 nn.Linear(256, 256),
+                                 nn.Linear(256, action_dim))
 
         self.max_action = max_action
 
     def forward(self, state):
-        a = F.relu(self.l1(state))
-        a = F.relu(self.l2(a))
-        return self.max_action * torch.tanh(self.l3(a))
+        return self.max_action * torch.tanh(self.net(state))
 
 
 class Critic(nn.Module):
@@ -79,11 +76,11 @@ class TD3(object):
 
         self.actor = Actor(state_dim, action_dim, max_action).to(device)
         self.actor_target = copy.deepcopy(self.actor)
-        self.actor_optimizer = torch.optim.Adam(self.actor.parameters(), lr=3e-4)
+        self.actor_optimizer = torch.optim.Adam(self.actor.parameters(), lr=3e-5)
 
         self.critic = Critic(state_dim, action_dim).to(device)
         self.critic_target = copy.deepcopy(self.critic)
-        self.critic_optimizer = torch.optim.Adam(self.critic.parameters(), lr=3e-4)
+        self.critic_optimizer = torch.optim.Adam(self.critic.parameters(), lr=3e-5)
 
         self.max_action = max_action
         self.discount = discount
