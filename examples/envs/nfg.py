@@ -115,6 +115,7 @@ class NFGEnvironment(AECEnv):
         self._accumulate_rewards()
 
         if self.render_mode == "human":
+            print(f'{self.render_mode}')
             self.render()
 
     def state(self):
