@@ -629,7 +629,6 @@ class IntervalUnionRestriction(ContinuousRestriction):
 
         return self.getHeight(root.l) - self.getHeight(root.r)
 
-    @property
     def intervals(self):
         return self._intervals()
 
