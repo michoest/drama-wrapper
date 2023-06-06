@@ -160,6 +160,9 @@ class RestrictionWrapper(BaseWrapper):
             )
             self.restrictions[self.env.agent_selection] = action
 
+            # Clear the rewards
+            self._clear_rewards()
+
             # Switch to the next agent of the original environment
             self.agent_selection = self.env.agent_selection
         else:
