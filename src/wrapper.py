@@ -153,6 +153,9 @@ class RestrictionWrapper(BaseWrapper):
                 self.agent_selection = self.env.agent_selection
                 return
 
+            # Reset cumulative reward for the current restrictor
+            self._cumulative_rewards[self.agent_selection] = 0
+
             # Otherwise set the restrictions that apply to the next agent.
             assert (
                     self.agent_restrictor_mapping[self.env.agent_selection]
@@ -175,7 +178,7 @@ class RestrictionWrapper(BaseWrapper):
                 **self.env.rewards,
                 **{
                     restrictor: self.restrictor_reward_fns[restrictor](
-                        self.env, self.rewards
+                        self.env, self.env.rewards
                     )
                     for restrictor in self.restrictors
                 },
