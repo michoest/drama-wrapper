@@ -1,3 +1,5 @@
+import copy
+
 import numpy as np
 from gymnasium.spaces import Box
 from pettingzoo import AECEnv
@@ -27,4 +29,4 @@ class CournotRestrictor(Restrictor):
 
             self.previous_observation = observation
 
-        return self.restriction
+        return copy.deepcopy(self.restriction)
