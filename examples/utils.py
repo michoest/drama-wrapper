@@ -1,6 +1,7 @@
 from typing import Union
 
 import pandas as pd
+import copy
 
 
 def play(
