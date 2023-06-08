@@ -12,10 +12,10 @@ from gymnasium.spaces import Box
 
 class Restriction(ABC, gym.Space):
     def __init__(
-        self,
-        base_space: gym.Space,
-        *,
-        seed: int | np.random.Generator | None = None,
+            self,
+            base_space: gym.Space,
+            *,
+            seed: int | np.random.Generator | None = None,
     ):
         super().__init__(base_space.shape, base_space.dtype, seed)
         self.base_space = base_space
@@ -26,31 +26,31 @@ class Restriction(ABC, gym.Space):
 
 class DiscreteRestriction(Restriction):
     def __init__(
-        self,
-        base_space: gym.spaces.Discrete,
-        *,
-        seed: int | np.random.Generator | None = None,
+            self,
+            base_space: gym.spaces.Discrete,
+            *,
+            seed: int | np.random.Generator | None = None,
     ):
         super().__init__(base_space, seed=seed)
 
 
 class ContinuousRestriction(Restriction):
     def __init__(
-        self,
-        base_space: gym.spaces.Box,
-        *,
-        seed: int | np.random.Generator | None = None,
+            self,
+            base_space: gym.spaces.Box,
+            *,
+            seed: int | np.random.Generator | None = None,
     ):
         super().__init__(base_space, seed=seed)
 
 
 class DiscreteSetRestriction(DiscreteRestriction):
     def __init__(
-        self,
-        base_space: gym.spaces.Discrete,
-        *,
-        allowed_actions: Optional[Set[int]] = None,
-        seed: int | np.random.Generator | None = None,
+            self,
+            base_space: gym.spaces.Discrete,
+            *,
+            allowed_actions: Optional[Set[int]] = None,
+            seed: int | np.random.Generator | None = None,
     ):
         super().__init__(base_space, seed=seed)
 
@@ -76,11 +76,11 @@ class DiscreteSetRestriction(DiscreteRestriction):
 
 class DiscreteVectorRestriction(DiscreteRestriction):
     def __init__(
-        self,
-        base_space: gym.spaces.Discrete,
-        *,
-        allowed_actions: Optional[np.ndarray[bool]] = None,
-        seed: int | np.random.Generator | None = None,
+            self,
+            base_space: gym.spaces.Discrete,
+            *,
+            allowed_actions: Optional[np.ndarray[bool]] = None,
+            seed: int | np.random.Generator | None = None,
     ):
         super().__init__(base_space, seed=seed)
 
@@ -110,12 +110,12 @@ class Node(object):
     """Node in the AVL tree which represents a valid interval"""
 
     def __init__(
-        self,
-        x: float = None,
-        y: float = None,
-        left: object = None,
-        right: object = None,
-        height: int = 1,
+            self,
+            x: float = None,
+            y: float = None,
+            left: object = None,
+            right: object = None,
+            height: int = 1,
     ):
         """
         Args:
@@ -199,12 +199,12 @@ class IntervalUnionRestriction(ContinuousRestriction):
 
         x = Decimal(f"{x}")
 
-        if x > root.y:
+        if root and x > root.y:
             return self._nearest_elements(x, x - root.y, root.y, root.r)
-        elif x < root.x:
+        elif root and x < root.x:
             return self._nearest_elements(x, root.x - x, root.x, root.l)
         else:
-            return x
+            return [x]
 
     def _nearest_elements(self, x, min_diff, min_value, root: Node = "root"):
         if root == "root":
@@ -235,7 +235,7 @@ class IntervalUnionRestriction(ContinuousRestriction):
                 else self._nearest_elements(x, distance, root.x, root.l)
             )
         else:
-            return x
+            return [x]
 
     def nearest_element(self, x, root: Node = "root"):
         """Finds the nearest action for a number in the action space. Larger actions
@@ -447,7 +447,8 @@ class IntervalUnionRestriction(ContinuousRestriction):
             root = self.root_tree
 
         if root is None:
-            raise Exception("Empty Action Space")
+            # raise Exception("Empty Action Space") or
+            return self.base_space.sample()
 
         if self.draw is None:
             self.draw = Decimal(f"{random.uniform(0.0, float(self.size))}")
@@ -672,13 +673,13 @@ class BucketSpace(ContinuousRestriction):
         return True
 
     def __init__(
-        self,
-        low: SupportsFloat,
-        high: SupportsFloat,
-        bucket_width=1.0,
-        epsilon=0.01,
-        dtype: Union[type[np.floating[Any]], type[np.integer[Any]]] = np.float32,
-        seed: Optional[Union[int, np.random.Generator]] = None,
+            self,
+            low: SupportsFloat,
+            high: SupportsFloat,
+            bucket_width=1.0,
+            epsilon=0.01,
+            dtype: Union[type[np.floating[Any]], type[np.integer[Any]]] = np.float32,
+            seed: Optional[Union[int, np.random.Generator]] = None,
     ) -> None:
         super().__init__(low, high, dtype, seed)
 
@@ -832,7 +833,7 @@ class BucketSpace(ContinuousRestriction):
             if upper_bucket is None:
                 self.buckets[lower_bucket:] = value
             else:
-                self.buckets[lower_bucket : upper_bucket + 1] = value
+                self.buckets[lower_bucket: upper_bucket + 1] = value
 
     def reset(self):
         """Resets the action space to the unrestricted state"""
@@ -869,11 +870,11 @@ class BucketSpace(ContinuousRestriction):
 
 class PredicateRestriction(Restriction):
     def __init__(
-        self,
-        base_space: gym.Space,
-        *,
-        predicate: Optional[Callable[[Any], bool]] = None,
-        seed: int | np.random.Generator | None = None,
+            self,
+            base_space: gym.Space,
+            *,
+            predicate: Optional[Callable[[Any], bool]] = None,
+            seed: int | np.random.Generator | None = None,
     ):
         super().__init__(base_space, seed=seed)
 

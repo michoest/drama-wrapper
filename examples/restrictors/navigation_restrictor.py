@@ -376,10 +376,11 @@ class NavigationRestrictor(Restrictor):
         for restriction in restrictions:
             if restriction[0] != restriction[1]:
                 if restriction[1] < restriction[0]:
-                    interval_union_restriction.remove(-180.0, float(restriction[1]))
-                    interval_union_restriction.remove(float(restriction[0]), 180.0)
+                    interval_union_restriction.remove(-180.0, float(restriction[1]) + self.safety_angle)
+                    interval_union_restriction.remove(float(restriction[0]) - self.safety_angle, 180.0)
                 else:
-                    interval_union_restriction.remove(float(restriction[0]), float(restriction[1]))
+                    interval_union_restriction.remove(float(restriction[0]) - self.safety_angle,
+                                                      float(restriction[1]) + self.safety_angle)
         return interval_union_restriction
 
     def generate_obstacles(self, height, width, seed: int = 42, max_iterations: int = 10000):
