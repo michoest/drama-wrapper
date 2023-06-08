@@ -398,9 +398,6 @@ class NavigationRestrictor(Restrictor):
 
             return False
 
-        if seed is not None:
-            np.random.seed(seed)
-
         self.obstacles = []
 
         iteration = 0
