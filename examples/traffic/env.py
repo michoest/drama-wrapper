@@ -8,7 +8,7 @@ import numpy as np
 from pettingzoo import AECEnv
 from pettingzoo.utils import agent_selector
 
-from utils.utils import analyze_graph, edge_path_to_node_path, latency
+from utils import analyze_graph, edge_path_to_node_path, latency
 
 
 class TrafficEnvironment(AECEnv):
