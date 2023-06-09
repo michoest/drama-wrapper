@@ -172,17 +172,16 @@ class IntervalUnionRestriction(ContinuousRestriction):
         """
         if root == "root":
             root = self.root_tree
-
-        x = Decimal(f"{x}")
+        x = Decimal(f"{x[0]}")
 
         if not root:
             return False
         elif root.x <= x <= root.y:
             return True
         elif root.x > x:
-            return self.contains(x, root.l)
+            return self.contains([x], root.l)
         else:
-            return self.contains(x, root.r)
+            return self.contains([x], root.r)
 
     def nearest_elements(self, x, root: Node = "root"):
         """Finds nearest actions for a number in the action space

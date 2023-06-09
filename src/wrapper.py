@@ -5,6 +5,7 @@ from gymnasium.spaces import Dict
 from pettingzoo import AECEnv
 from pettingzoo.utils import BaseWrapper
 
+from src.restrictions import Restriction
 from src.restrictors import Restrictor
 from src.utils import flatten
 
@@ -16,6 +17,10 @@ def _default_restrictor_reward_fn(env, rewards):
 
 def _default_preprocess_restrictor_observation_fn(env):
     return env.state()
+
+
+def _default_restriction_violation_fn(env, action, restriction: Restriction):
+    return restriction.sample()
 
 
 class RestrictionWrapper(BaseWrapper):
@@ -38,8 +43,9 @@ class RestrictionWrapper(BaseWrapper):
             agent_restrictor_mapping: dict = None,
             restrictor_reward_fns: Union[dict, Callable] = None,
             preprocess_restrictor_observation_fns: Union[dict, Callable] = None,
+            restriction_violation_fns: Union[dict, Callable] = None,
             restriction_key: str = "restriction",
-            observation_key: str = "observation",
+            observation_key: str = "observation"
     ):
         if isinstance(restrictors, dict):
             assert agent_restrictor_mapping, 'Agent-restrictor mapping required!'
@@ -72,6 +78,14 @@ class RestrictionWrapper(BaseWrapper):
                         name]
                 elif hasattr(restrictor, 'preprocess_observation'):
                     self.preprocess_restrictor_observation_fns[name] = restrictor.preprocess_observation
+
+        self.restriction_violation_fns = {
+            agent: restriction_violation_fns[agent]
+            if restriction_violation_fns and restriction_violation_fns.get(agent, None)
+            else _default_restriction_violation_fn
+            for agent in self.env.possible_agents
+        } if isinstance(restriction_violation_fns, Union[dict, None]) else {
+            agent: restriction_violation_fns for agent in self.env.possible_agents}
 
         self.restriction_key = restriction_key
         self.observation_key = observation_key
@@ -166,6 +180,11 @@ class RestrictionWrapper(BaseWrapper):
             # Switch to the next agent of the original environment
             self.agent_selection = self.env.agent_selection
         else:
+            # Check if the action violated the current restriction for the agent
+            if action and not self.restrictions[self.agent_selection].contains(action):
+                action = self.restriction_violation_fns[self.agent_selection](self.env, action,
+                                                                              self.restrictions[self.agent_selection])
+
             # If the action was taken by an agent, execute it in the original
             # environment
             self.env.step(action)

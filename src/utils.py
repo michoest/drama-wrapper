@@ -19,6 +19,11 @@ class IntervalsOutOfBoundException(Exception):
         super().__init__(*args)
 
 
+class RestrictionViolationException(Exception):
+    def __init__(self, *args) -> None:
+        super().__init__(*args)
+
+
 @singledispatch
 def flatten(space: Space, x: T, **kwargs) -> FlatType:
     return gymnasium.spaces.utils.flatten(space, x)
