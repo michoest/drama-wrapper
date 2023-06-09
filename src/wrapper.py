@@ -20,7 +20,7 @@ def _default_preprocess_restrictor_observation_fn(env):
 
 
 def _default_restriction_violation_fn(env, action, restriction: Restriction):
-    return restriction.sample()
+    env.step(restriction.sample())
 
 
 class RestrictionWrapper(BaseWrapper):
@@ -182,12 +182,12 @@ class RestrictionWrapper(BaseWrapper):
         else:
             # Check if the action violated the current restriction for the agent
             if action and not self.restrictions[self.agent_selection].contains(action):
-                action = self.restriction_violation_fns[self.agent_selection](self.env, action,
-                                                                              self.restrictions[self.agent_selection])
-
-            # If the action was taken by an agent, execute it in the original
-            # environment
-            self.env.step(action)
+                self.restriction_violation_fns[self.agent_selection](self.env, action,
+                                                                     self.restrictions[self.agent_selection])
+            else:
+                # If the action was taken by an agent, execute it in the original
+                # environment
+                self.env.step(action)
 
             # Update properties
             self.agents = self.env.agents + list(
