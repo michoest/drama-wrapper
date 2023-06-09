@@ -95,12 +95,12 @@ class DiscreteVectorRestriction(DiscreteRestriction):
         return True
 
     def sample(self, mask: None = None) -> int:
-        return self.start + random.choice(
+        return self.base_space.start + random.choice(
             tuple(index for index, value in enumerate(self.allowed_actions) if value)
         )
 
     def contains(self, x: int) -> bool:
-        return self.allowed_actions[x - self.start]
+        return self.allowed_actions[x - self.base_space.start]
 
     def __repr__(self) -> str:
         return f"{self.__class__.__name__}({self.allowed_actions})"
