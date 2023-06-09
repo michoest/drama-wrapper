@@ -4,10 +4,14 @@ from typing import Any, Union
 import gymnasium as gym
 import numpy as np
 import torch
-from gymnasium.spaces import Box
+from gymnasium.spaces import Box, Discrete
 from pettingzoo import AECEnv
 
-from src.restrictions import Restriction, IntervalUnionRestriction
+from src.restrictions import (
+    Restriction,
+    IntervalUnionRestriction,
+    DiscreteVectorRestriction,
+)
 
 
 class RestrictorActionSpace(ABC, gym.Space):
@@ -25,7 +29,7 @@ class RestrictorActionSpace(ABC, gym.Space):
 
     def is_compatible_with(self, action_space: gym.Space):
         return self.base_space == action_space
-    
+
     def __repr__(self) -> str:
         return f"{self.__class__.__name__}(base_space={self.base_space})"
 
@@ -67,3 +71,21 @@ class IntervalUnionActionSpace(RestrictorActionSpace):
                 self.np_random.uniform(interval_start, self.base_space.high[0]),
             )
         return interval_union
+
+
+class DiscreteVectorActionSpace(RestrictorActionSpace):
+    def __init__(self, base_space: Discrete):
+        super().__init__(base_space)
+
+    @property
+    def is_np_flattenable(self) -> bool:
+        return True
+
+    def sample(self, mask: Any | None = None) -> DiscreteVectorRestriction:
+        assert isinstance(self.base_space, Discrete)
+
+        discrete_vector = DiscreteVectorRestriction(
+            self.base_space, np.random.choice([True, False], self.base_space.n)
+        )
+
+        return discrete_vector
