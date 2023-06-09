@@ -398,7 +398,7 @@ class NavigationRestrictor(Restrictor):
                     return True
 
             return False
-
+        print(f'Generating obstacles with seed {seed}')
         rng = np.random.RandomState(seed)
 
         self.obstacles = []
