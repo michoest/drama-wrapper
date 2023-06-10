@@ -4,3 +4,4 @@ gymnasium
 shapely
 numpy
 seaborn
+pygame

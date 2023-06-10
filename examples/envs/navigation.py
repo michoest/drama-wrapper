@@ -214,6 +214,7 @@ class NavigationEnvironment(AECEnv):
         self.agent.collided = self.detect_collision()
         self.agent.set_distance_target(self.distance_to_target())
         self.rewards = {'agent_0': self.get_reward()}
+        self.infos = {'agent_0': {'solved': self.agent.distance_target <= self.GOAL_RADIUS}}
         self.trajectory.append([float(self.agent.x),
                                 float(self.agent.y)])
         self.current_step += 1
