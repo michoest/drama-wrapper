@@ -2,7 +2,6 @@ import numpy as np
 import torch
 from typing import Union
 import pandas as pd
-import copy
 
 
 def play(
@@ -10,7 +9,7 @@ def play(
     policies,
     *,
     max_iter=1_000,
-    render_mode='human',
+    render_mode="human",
     verbose=False,
     record_trajectory=False,
 ) -> Union[pd.DataFrame, None]:
@@ -48,7 +47,22 @@ def play(
     if render_mode is not None:
         env.render()
 
-    return pd.DataFrame(trajectory, columns=['agent', 'observation', 'reward', 'termination', 'truncation', 'info', 'action']) if record_trajectory else None
+    return (
+        pd.DataFrame(
+            trajectory,
+            columns=[
+                "agent",
+                "observation",
+                "reward",
+                "termination",
+                "truncation",
+                "info",
+                "action",
+            ],
+        )
+        if record_trajectory
+        else None
+    )
 
 
 def restriction_aware_random_policy(observation):
