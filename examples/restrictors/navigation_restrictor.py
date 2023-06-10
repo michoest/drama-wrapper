@@ -385,19 +385,16 @@ class NavigationRestrictor(Restrictor):
 
     def generate_obstacles(self, height, width, seed: int = 42, max_iterations: int = 10000):
         def is_valid(el_coordinates):
-            if (minimum_distance > el_coordinates[0]) or (el_coordinates[0] > width - minimum_distance
-            ) or (minimum_distance > el_coordinates[1]) or (el_coordinates[1] > height - minimum_distance):
-                return True
+            out_of_map = minimum_distance > el_coordinates[0] or el_coordinates[0] > width - minimum_distance or (
+                    minimum_distance > el_coordinates[1]) or el_coordinates[1] > height - minimum_distance
 
-            for geometry in self.obstacles:
-                geometry_coordinates = np.array(geometry.coordinates, dtype=np.float32)
-                if Point(midpoint(geometry_coordinates)
-                         ).distance(Point(el_coordinates)) < minimum_distance + np.sqrt(
-                    2 * ((max(geometry_coordinates[:, 1]) - min(
-                        geometry_coordinates[:, 1])) / 2) ** 2):
-                    return True
+            collision = np.any(
+                [Point(midpoint(geometry.coordinates)).distance(Point(el_coordinates)) < minimum_distance + np.sqrt(
+                    2 * (
+                            (max([float(t) for t in geometry.coordinates[:, 1]]) - min(
+                                [float(t) for t in geometry.coordinates[:, 1]])) / 2) ** 2) for geometry in self.obstacles])
 
-            return False
+            return not out_of_map and not collision
         print(f'Generating obstacles with seed {seed}')
         rng = np.random.RandomState(seed)
 
