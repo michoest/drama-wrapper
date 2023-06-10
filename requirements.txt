@@ -3,3 +3,6 @@ torch
 gymnasium
 shapely
 numpy
+seaborn
+pygame
+tqdm

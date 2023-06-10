@@ -91,7 +91,6 @@ class NavigationEnvironment(AECEnv):
                             (0.0, self.HEIGHT)])
         self.current_step = 0
         self.previous_position = [Decimal(0.0), Decimal(0.0)]
-        self.last_reward = 0.0
         self.trajectory = []
 
         self.possible_agents = ['agent_0']
@@ -119,6 +118,7 @@ class NavigationEnvironment(AECEnv):
         self.trajectory.append([float(self.agent.x),
                                 float(self.agent.y)])
         self.agent = Agent(**self.AGENT_SETUP)
+        self.agent.distance_target = self.distance_to_target()
         self.current_step = 0
 
         self.agents = copy(self.possible_agents)
@@ -213,7 +213,8 @@ class NavigationEnvironment(AECEnv):
         self.agent.last_action = action
         self.agent.collided = self.detect_collision()
         self.agent.set_distance_target(self.distance_to_target())
-        self.last_reward = self.get_reward()
+        self.rewards = {'agent_0': self.get_reward()}
+        self.infos = {'agent_0': {'solved': self.agent.distance_target <= self.GOAL_RADIUS}}
         self.trajectory.append([float(self.agent.x),
                                 float(self.agent.y)])
         self.current_step += 1

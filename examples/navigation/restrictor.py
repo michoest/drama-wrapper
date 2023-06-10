@@ -280,14 +280,13 @@ class NavigationRestrictor(Restrictor):
         self.mean_size = obstacle_mean_size
         self.variance_size = obstacle_variance_size
         self.size_range = obstacle_size_range
-        self.start_seed = start_seed
         self.safety_angle = safety_angle
         self.min_angle = min_angle
         self.max_angle = max_angle
+        self.seed = start_seed
 
         self.obstacles = []
         self.map_collision_area = None
-        self.seed = 0
 
     def preprocess_observation(self, env: NavigationEnvironment):
         return {
@@ -301,11 +300,12 @@ class NavigationRestrictor(Restrictor):
 
     def act(self, observation: dict) -> IntervalUnionRestriction:
         if observation['step'][0] == 0:
-            self.generate_obstacles(observation['height'][0], observation['width'][0])
+            self.generate_obstacles(observation['height'][0], observation['width'][0], seed=self.seed)
             self.map_collision_area = Polygon([(0.0, 0.0), (observation['width'][0], 0.0),
                                                (observation['width'][0], observation['height']),
                                                (0.0, observation['height'][0])]).exterior.buffer(
                 observation['agent_radius'][0])
+            self.seed += 1
 
         agent = Agent(x=observation['state'][0], y=observation['state'][1],
                       perspective=observation['state'][2],
@@ -376,30 +376,27 @@ class NavigationRestrictor(Restrictor):
         for restriction in restrictions:
             if restriction[0] != restriction[1]:
                 if restriction[1] < restriction[0]:
-                    interval_union_restriction.remove(float(self.min_angle), float(restriction[1]))
-                    interval_union_restriction.remove(float(restriction[0]), float(self.max_angle))
+                    interval_union_restriction.remove(-180.0, float(restriction[1]) + self.safety_angle)
+                    interval_union_restriction.remove(float(restriction[0]) - self.safety_angle, 180.0)
                 else:
-                    interval_union_restriction.remove(float(restriction[0]), float(restriction[1]))
+                    interval_union_restriction.remove(float(restriction[0]) - self.safety_angle,
+                                                      float(restriction[1]) + self.safety_angle)
         return interval_union_restriction
 
     def generate_obstacles(self, height, width, seed: int = 42, max_iterations: int = 10000):
         def is_valid(el_coordinates):
-            if (minimum_distance > el_coordinates[0]) or (el_coordinates[0] > width - minimum_distance
-            ) or (minimum_distance > el_coordinates[1]) or (el_coordinates[1] > height - minimum_distance):
-                return True
+            out_of_map = minimum_distance > el_coordinates[0] or el_coordinates[0] > width - minimum_distance or (
+                    minimum_distance > el_coordinates[1]) or el_coordinates[1] > height - minimum_distance
 
-            for geometry in self.obstacles:
-                geometry_coordinates = np.array(geometry.coordinates, dtype=np.float32)
-                if Point(midpoint(geometry_coordinates)
-                         ).distance(Point(el_coordinates)) < minimum_distance + np.sqrt(
-                    2 * ((max(geometry_coordinates[:, 1]) - min(
-                        geometry_coordinates[:, 1])) / 2) ** 2):
-                    return True
+            collision = np.any(
+                [Point(midpoint(geometry.coordinates)).distance(Point(el_coordinates)) < minimum_distance + np.sqrt(
+                    2 * (
+                            (max([float(t) for t in geometry.coordinates[:, 1]]) - min(
+                                [float(t) for t in geometry.coordinates[:, 1]])) / 2) ** 2) for geometry in self.obstacles])
 
-            return False
+            return not out_of_map and not collision
 
-        if seed is not None:
-            np.random.seed(seed)
+        rng = np.random.RandomState(seed)
 
         self.obstacles = []
 
@@ -407,19 +404,19 @@ class NavigationRestrictor(Restrictor):
         while len(self.obstacles) < self.count:
             iteration += 1
 
-            size_obstacle = np.clip(np.random.normal(self.mean_size, self.variance_size),
+            size_obstacle = np.clip(rng.normal(self.mean_size, self.variance_size),
                                     self.mean_size - self.size_range,
                                     self.mean_size + self.size_range)
 
             minimum_distance = np.sqrt(2 * (size_obstacle / 2) ** 2) + 0.95
 
-            position = np.random.multivariate_normal([width / 2, height / 2],
-                                                     self.position_covariance)
+            position = rng.multivariate_normal([width / 2, height / 2],
+                                               self.position_covariance)
 
             position[0] = np.clip(position[0], 0.0, width - size_obstacle)
             position[1] = np.clip(position[1], 0.0, height - size_obstacle)
             coordinates = SHAPE_COLLECTION[
-                              np.random.randint(0, len(SHAPE_COLLECTION) - 1)] * size_obstacle + position - (
+                              rng.randint(0, len(SHAPE_COLLECTION) - 1)] * size_obstacle + position - (
                                   size_obstacle / 2)
 
             if is_valid(position) or iteration > max_iterations:
