@@ -1,10 +1,25 @@
 import numpy as np
 import torch
+from typing import Union
+import pandas as pd
+import copy
 
 
-def play(env, policies, *, max_iter=1_000, verbose=False, record_trajectory=False):
+def play(
+    env,
+    policies,
+    *,
+    max_iter=1_000,
+    render_mode='human',
+    verbose=False,
+    record_trajectory=False,
+) -> Union[pd.DataFrame, None]:
+    env.unwrapped.render_mode = render_mode
+
     env.reset()
-    env.render()
+
+    if render_mode is not None:
+        env.render()
 
     if record_trajectory:
         trajectory = []
@@ -24,13 +39,16 @@ def play(env, policies, *, max_iter=1_000, verbose=False, record_trajectory=Fals
             print(f"{action=}")
 
         if record_trajectory:
-            trajectory.append((agent, observation, reward, termination, truncation, info, action))
+            trajectory.append(
+                (agent, observation, reward, termination, truncation, info, action)
+            )
 
         env.step(action)
 
-    env.render()
+    if render_mode is not None:
+        env.render()
 
-    return trajectory if record_trajectory else None
+    return pd.DataFrame(trajectory, columns=['agent', 'observation', 'reward', 'termination', 'truncation', 'info', 'action']) if record_trajectory else None
 
 
 def restriction_aware_random_policy(observation):
