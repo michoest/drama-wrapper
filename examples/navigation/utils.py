@@ -101,6 +101,16 @@ def render(vis_policy, env_config, restriction_violation_fns, seed):
     if len(trajectory) > 1:
         pygame.draw.aalines(canvas, (232, 232, 232), False, np.multiply(trajectory, window_scale), 0)
 
+    gfxdraw.pie(canvas, int(float(vis_env.env.agent.x) * window_scale),
+                int(float(vis_env.env.agent.y) * window_scale),
+                int(float(vis_env.env.agent.step_size + vis_env.env.agent.radius) * window_scale),
+                int(float(vis_env.env.agent.perspective) - float(vis_env.env.ACTION_RANGE) / 2),
+                int(float(vis_env.env.agent.perspective) + float(vis_env.env.ACTION_RANGE) / 2), (0, 0, 0))
+
+    gfxdraw.filled_circle(canvas, int(float(vis_env.env.agent.x) * window_scale),
+                          int(float(vis_env.env.agent.y) * window_scale),
+                          int(float(vis_env.env.agent.radius) * window_scale), (65, 105, 225))
+
     canvas = pygame.transform.flip(canvas, False, True)
     window.blit(canvas, (0, 0))
     plt.imshow(np.transpose(
