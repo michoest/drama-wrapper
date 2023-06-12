@@ -1,3 +1,5 @@
+from typing import Any
+
 from collections import OrderedDict
 from functools import singledispatch
 
@@ -7,11 +9,11 @@ from gymnasium import Space
 from gymnasium.spaces import Dict
 from gymnasium.spaces.utils import FlatType
 
-from src.restrictions import IntervalUnionRestriction
+from src.restrictions import IntervalUnionRestriction, DiscreteVectorRestriction
 
 from gymnasium.spaces.utils import T
 
-from src.restrictors import IntervalUnionActionSpace
+from src.restrictors import IntervalUnionActionSpace, DiscreteVectorActionSpace
 
 
 class IntervalsOutOfBoundException(Exception):
@@ -24,6 +26,7 @@ class RestrictionViolationException(Exception):
         super().__init__(*args)
 
 
+# flatten functions for restriction classes
 @singledispatch
 def flatten(space: Space, x: T, **kwargs) -> FlatType:
     return gymnasium.spaces.utils.flatten(space, x)
@@ -52,3 +55,31 @@ def _flatten_interval_union_restriction(space: IntervalUnionActionSpace, x: Inte
         return np.concatenate([intervals, padding], axis=0, dtype=np.float32).flatten() \
             if len(intervals) > 0 else padding.flatten()
     return intervals.flatten()
+
+
+@flatten.register(DiscreteVectorActionSpace)
+def _flatten_discrete_vector_action_space(space: DiscreteVectorActionSpace, x: DiscreteVectorRestriction):
+    return np.asarray(x.allowed_actions, dtype=space.dtype).flatten()
+
+
+# flatdim functions for restriction classes
+@singledispatch
+def flatdim(space: Space[Any]) -> int:
+    return gymnasium.spaces.utils.flatdim(space)
+
+
+@flatdim.register(DiscreteVectorActionSpace)
+def _flatdim_discrete_vector_action_space(space: DiscreteVectorActionSpace) -> int:
+    # print('_flatdim_discrete_vector_action_space')
+    return space.base_space.n
+
+
+# unflatten functions for restriction classes
+@singledispatch
+def unflatten(space: Space[T], x: FlatType) -> T:
+    return gymnasium.spaces.utils.unflatten(space, x)
+
+
+@unflatten.register(DiscreteVectorActionSpace)
+def _unflatten_discrete_vector_action_space(space: DiscreteVectorActionSpace, x: FlatType) -> T:
+    return DiscreteVectorRestriction(space.base_space, allowed_actions=x)
