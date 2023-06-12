@@ -85,7 +85,8 @@ class DiscreteVectorActionSpace(RestrictorActionSpace):
         assert isinstance(self.base_space, Discrete)
 
         discrete_vector = DiscreteVectorRestriction(
-            self.base_space, np.random.choice([True, False], self.base_space.n)
+            self.base_space,
+            allowed_actions=np.random.choice([True, False], self.base_space.n),
         )
 
         return discrete_vector
