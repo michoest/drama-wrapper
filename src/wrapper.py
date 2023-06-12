@@ -19,6 +19,10 @@ def _default_preprocess_restrictor_observation_fn(env):
     return env.state()
 
 
+def _default_postprocess_restriction_fn(restriction):
+    return restriction
+
+
 def _default_restriction_violation_fn(env, action, restriction: Restriction):
     env.step(restriction.sample())
 
@@ -43,6 +47,7 @@ class RestrictionWrapper(BaseWrapper):
             agent_restrictor_mapping: dict = None,
             restrictor_reward_fns: Union[dict, Callable] = None,
             preprocess_restrictor_observation_fns: Union[dict, Callable] = None,
+            postprocess_restriction_fns: Union[dict, Callable] = None,
             restriction_violation_fns: Union[dict, Callable] = None,
             restriction_key: str = "restriction",
             observation_key: str = "observation"
@@ -65,6 +70,7 @@ class RestrictionWrapper(BaseWrapper):
         } if isinstance(restrictor_reward_fns, Union[dict, None]) else {
             restrictor: restrictor_reward_fns for restrictor in self.restrictors}
 
+        # Set restrictor observation preprocessing functions
         if isinstance(preprocess_restrictor_observation_fns, Callable):
             self.preprocess_restrictor_observation_fns = {
                 restrictor: preprocess_restrictor_observation_fns for restrictor in self.restrictors}
@@ -78,6 +84,21 @@ class RestrictionWrapper(BaseWrapper):
                         name]
                 elif hasattr(restrictor, 'preprocess_observation'):
                     self.preprocess_restrictor_observation_fns[name] = restrictor.preprocess_observation
+
+        # Set restriction postprocessing functions
+        if isinstance(postprocess_restriction_fns, Callable):
+            self.postprocess_restriction_fns = {
+                restrictor: postprocess_restriction_fns for restrictor in self.restrictors}
+        else:
+            self.postprocess_restriction_fns = {
+                restrictor: _default_postprocess_restriction_fn for restrictor in self.restrictors}
+            for name, restrictor in self.restrictors.items():
+                if isinstance(postprocess_restriction_fns, dict) \
+                        and postprocess_restriction_fns.get(name, None):
+                    self.postprocess_restriction_fns[name] = postprocess_restriction_fns[
+                        name]
+                elif hasattr(restrictor, 'postprocess_restriction'):
+                    self.postprocess_restriction_fns[name] = restrictor.postprocess_restriction
 
         self.restriction_violation_fns = {
             agent: restriction_violation_fns[agent]
@@ -175,7 +196,8 @@ class RestrictionWrapper(BaseWrapper):
                     self.agent_restrictor_mapping[self.env.agent_selection]
                     == self.agent_selection
             )
-            self.restrictions[self.env.agent_selection] = action
+            # self.restrictions[self.env.agent_selection] = action
+            self.restrictions[self.env.agent_selection] = self.postprocess_restriction_fns[self.agent_selection](action)
 
             # Switch to the next agent of the original environment
             self.agent_selection = self.env.agent_selection
