@@ -87,7 +87,7 @@ class DiscreteVectorRestriction(DiscreteRestriction):
         self.allowed_actions = (
             allowed_actions
             if allowed_actions is not None
-            else set(range(base_space.start, base_space.start + base_space.n))
+            else np.ones(base_space.n, dtype=np.bool_)
         )
 
     @property
