@@ -14,18 +14,18 @@ from utils import analyze_graph, edge_path_to_node_path, latency
 class TrafficEnvironment(AECEnv):
     metadata = {"render_modes": ["human"], "name": "traffic_v1"}
 
-    def __init__(self, graph, agents, possible_routes, number_of_steps):
+    def __init__(self, graph, agents, possible_agent_routes, number_of_routes, edge_latencies, route_list, number_of_steps):
         super().__init__()
 
         self.possible_agents = agents
 
-        edge_list, _, edge_latencies, routes, route_list, route_indices = analyze_graph(
-            graph
-        )
+        # edge_list, _, edge_latencies, routes, route_list, route_indices, source_target_map = analyze_graph(
+        #     graph
+        # )
 
         self._number_of_nodes = graph.number_of_nodes()
         self._number_of_edges = graph.number_of_edges()
-        self._number_of_routes = len(routes)
+        self._number_of_routes = number_of_routes
 
         self._observation_space = Dict(
             {
@@ -36,13 +36,13 @@ class TrafficEnvironment(AECEnv):
         )
         self._action_space = Discrete(self._number_of_routes)
 
-        self.routes = routes
-        self.route_indices = route_indices
+        # self.routes = routes
+        # self.route_indices = route_indices
         self.route_list = route_list
-        self.edge_list = edge_list
+        # self.edge_list = edge_list
         self.edge_latencies = edge_latencies
 
-        self.possible_routes = possible_routes
+        self.possible_agent_routes = possible_agent_routes
 
         self.number_of_steps = number_of_steps
 
@@ -101,7 +101,7 @@ class TrafficEnvironment(AECEnv):
         self.truncations = {agent: False for agent in self.agents}
         self.infos = {agent: {} for agent in self.agents}
         self._properties = {
-            agent: random.choice(self.possible_routes) for agent in self.agents
+            agent: random.choice(self.possible_agent_routes) for agent in self.agents
         }
         self._actions = {agent: None for agent in self.agents}
         self._routes_taken = {agent: tuple() for agent in self.agents}
@@ -140,12 +140,16 @@ class TrafficEnvironment(AECEnv):
             agent: -sum(self._travel_times[edge] for edge in self._routes_taken[agent])
             for agent in self.agents
         }
-        self._cumulative_rewards = self.rewards
+        self._cumulative_rewards = self.rewards.copy()
+
+        self.truncations = {agent: self.current_step >= self.number_of_steps for agent in self.agents}
 
         self.agent_selection = self._agent_selector.next()
 
         if self.render_mode == "human":
             self.render()
+
+        self.current_step += 1
 
     def state(self):
         return np.array(list(self._travel_times.values()))
