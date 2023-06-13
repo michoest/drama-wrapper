@@ -1,22 +1,36 @@
-import math
-from decimal import Decimal, getcontext
+# Typing
 from typing import Optional, Set, Callable, Any, SupportsFloat, Union
 
+# Standard modules
+import math
+from decimal import Decimal, getcontext
 from abc import ABC
 import random
 
+# External modules
 import numpy as np
 import gymnasium as gym
 from gymnasium.spaces import Box
 
 
 class Restriction(ABC, gym.Space):
+    """ Base class for restrictions. All restrictions are valid `gym.Space`s.
+    """
     def __init__(
             self,
             base_space: gym.Space,
             *,
             seed: int | np.random.Generator | None = None,
     ):
+        """Initializes a restriction with the base space of which the restriction
+        represents a subset.
+
+        Args:
+            base_space (gym.Space): Space whose subsets can be represented by the
+            restriction.
+            seed (int | np.random.Generator | None, optional): Random seed for
+            sampling. Defaults to None.
+        """
         super().__init__(base_space.shape, base_space.dtype, seed)
         self.base_space = base_space
 
@@ -25,6 +39,8 @@ class Restriction(ABC, gym.Space):
 
 
 class DiscreteRestriction(Restriction):
+    """Represents a restriction of a `Discrete` space.
+    """
     def __init__(
             self,
             base_space: gym.spaces.Discrete,
@@ -35,6 +51,8 @@ class DiscreteRestriction(Restriction):
 
 
 class ContinuousRestriction(Restriction):
+    """Represents a restriction of a `Box` space.
+    """
     def __init__(
             self,
             base_space: gym.spaces.Box,
@@ -45,6 +63,8 @@ class ContinuousRestriction(Restriction):
 
 
 class DiscreteSetRestriction(DiscreteRestriction):
+    """Represents a restriction of a `Discrete` space as a set of allowed actions.
+    """
     def __init__(
             self,
             base_space: gym.spaces.Discrete,
@@ -64,7 +84,7 @@ class DiscreteSetRestriction(DiscreteRestriction):
     def is_np_flattenable(self) -> bool:
         return True
 
-    def sample(self, mask: None = None) -> int:
+    def sample(self, mask: Any | None = None) -> int:
         return random.choice(tuple(self.allowed_actions))
 
     def contains(self, x: int) -> bool:
@@ -75,6 +95,9 @@ class DiscreteSetRestriction(DiscreteRestriction):
 
 
 class DiscreteVectorRestriction(DiscreteRestriction):
+    """Represents a restriction of a `Discrete` space as a boolean vector of allowed
+    and forbidden actions.
+    """
     def __init__(
             self,
             base_space: gym.spaces.Discrete,
@@ -94,7 +117,7 @@ class DiscreteVectorRestriction(DiscreteRestriction):
     def is_np_flattenable(self) -> bool:
         return True
 
-    def sample(self, mask: None = None) -> int:
+    def sample(self, mask: Any | None = None) -> int:
         return self.base_space.start + random.choice(
             tuple(index for index, value in enumerate(self.allowed_actions) if value)
         )
@@ -107,7 +130,7 @@ class DiscreteVectorRestriction(DiscreteRestriction):
 
 
 class Node(object):
-    """Node in the AVL tree which represents a valid interval"""
+    """Node in the AVL tree, representing a valid interval."""
 
     def __init__(
             self,
@@ -126,20 +149,21 @@ class Node(object):
         """
         self.x: Decimal = Decimal(f"{x}") if x is not None else None
         self.y: Decimal = Decimal(f"{y}") if y is not None else None
-        self.l = left
-        self.r = right
-        self.h = height
+        self.left = left
+        self.right = right
+        self.height = height
 
     def __str__(self):
-        return f"<Node ({self.x},{self.y}), height: {self.h}, left: {self.l}, \
-        right: {self.r}>"
+        return f"<Node ({self.x},{self.y}), height: {self.height}, left: {self.left}, \
+        right: {self.right}>"
 
     def __repr__(self):
         return self.__str__()
 
 
 class IntervalUnionRestriction(ContinuousRestriction):
-    """Interval Action Space as AVL tree"""
+    """Represents a restriction of a one-dimensional `Box` space as an AVL tree of
+    allowed intervals."""
 
     @property
     def is_np_flattenable(self) -> bool:
@@ -159,7 +183,7 @@ class IntervalUnionRestriction(ContinuousRestriction):
     def __contains__(self, item):
         return self.contains(item)
 
-    def contains(self, x, root: object = "root"):
+    def contains(self, x: float, root: object = "root"):
         """Determines if a number is part of the action space
 
         Args:
@@ -179,19 +203,21 @@ class IntervalUnionRestriction(ContinuousRestriction):
         elif root.x <= x <= root.y:
             return True
         elif root.x > x:
-            return self.contains(x, root.l)
+            return self.contains(x, root.left)
         else:
-            return self.contains(x, root.r)
+            return self.contains(x, root.right)
 
     def nearest_elements(self, x, root: Node = "root"):
         """Finds nearest actions for a number in the action space
 
         Args:
             x: Number
-            root: Node to start the search from or 'root' for searching the whole tree, default is 'root'
+            root: Node to start the search from or 'root' for searching the whole tree,
+            default is 'root'
 
         Returns:
-            Nearest elements in the action space. It is the number itself if it is valid.
+            Nearest elements in the action space. It is the number itself if it is
+            valid.
         """
         if root == "root":
             root = self.root_tree
@@ -199,9 +225,9 @@ class IntervalUnionRestriction(ContinuousRestriction):
         x = Decimal(f"{x}")
 
         if root and x > root.y:
-            return self._nearest_elements(x, x - root.y, root.y, root.r)
+            return self._nearest_elements(x, x - root.y, root.y, root.right)
         elif root and x < root.x:
-            return self._nearest_elements(x, root.x - x, root.x, root.l)
+            return self._nearest_elements(x, root.x - x, root.x, root.left)
         else:
             return [x]
 
@@ -222,7 +248,7 @@ class IntervalUnionRestriction(ContinuousRestriction):
                 if distance == min_diff
                 else [min_value]
                 if distance > min_diff
-                else self._nearest_elements(x, distance, root.y, root.r)
+                else self._nearest_elements(x, distance, root.y, root.right)
             )
         elif x < root.x:
             distance = root.x - x
@@ -231,7 +257,7 @@ class IntervalUnionRestriction(ContinuousRestriction):
                 if distance == min_diff
                 else [min_value]
                 if distance > min_diff
-                else self._nearest_elements(x, distance, root.x, root.l)
+                else self._nearest_elements(x, distance, root.x, root.left)
             )
         else:
             return [x]
@@ -278,13 +304,13 @@ class IntervalUnionRestriction(ContinuousRestriction):
             return (root.x, root.y), True
         elif x < root.x:
             return (
-                self.last_interval_before_or_within(x, root.l)
-                if root.l is not None
+                self.last_interval_before_or_within(x, root.left)
+                if root.left is not None
                 else ((None, None), False)
             )
         else:
             if root.r is not None:
-                interval, flag = self.last_interval_before_or_within(x, root.r)
+                interval, flag = self.last_interval_before_or_within(x, root.right)
                 if interval[0] is None:
                     interval, flag = (root.x, root.y), False
             else:
@@ -292,7 +318,7 @@ class IntervalUnionRestriction(ContinuousRestriction):
 
             return (
                 (interval, flag)
-                if root.r is not None
+                if root.right is not None
                 else ((root.x, root.y), False)
             )
 
@@ -320,13 +346,13 @@ class IntervalUnionRestriction(ContinuousRestriction):
             return (root.x, root.y), True
         elif x > root.y:
             return (
-                self.first_interval_after_or_within(x, root.r)
-                if root.r is not None
+                self.first_interval_after_or_within(x, root.right)
+                if root.right is not None
                 else ((None, None), False)
             )
         else:
-            if root.l is not None:
-                interval, flag = self.first_interval_after_or_within(x, root.l)
+            if root.left is not None:
+                interval, flag = self.first_interval_after_or_within(x, root.left)
                 if interval[0] is None:
                     interval, flag = (root.x, root.y), False
             else:
@@ -334,7 +360,7 @@ class IntervalUnionRestriction(ContinuousRestriction):
 
             return (
                 (interval, flag)
-                if root.l is not None
+                if root.left is not None
                 else ((root.x, root.y), False)
             )
 
@@ -351,10 +377,10 @@ class IntervalUnionRestriction(ContinuousRestriction):
         if root == "root":
             root = self.root_tree
 
-        if root is None or root.l is None:
+        if root is None or root.left is None:
             return root
         else:
-            return self.smallest_interval(root.l)
+            return self.smallest_interval(root.left)
 
     def add(self, x, y, root: Node = "root"):
         """Adds an interval to the action space
@@ -383,9 +409,9 @@ class IntervalUnionRestriction(ContinuousRestriction):
             self.size += y - x
             return Node(x, y)
         elif y < root.x:
-            root.l = self.add(x, y, root.l)
+            root.left = self.add(x, y, root.left)
         elif x > root.y:
-            root.r = self.add(x, y, root.r)
+            root.right = self.add(x, y, root.right)
         else:
             old_size = root.y - root.x
             root.x = min(root.x, x)
@@ -393,40 +419,40 @@ class IntervalUnionRestriction(ContinuousRestriction):
             self.size += root.y - root.x - old_size
 
             updated = False
-            if root.r is not None and root.y >= root.r.x:
-                self.size -= root.y - root.r.y
-                root.y = root.r.y
+            if root.right is not None and root.y >= root.right.x:
+                self.size -= root.y - root.right.y
+                root.y = root.right.y
                 updated = True
 
-            if root.l is not None and root.x <= root.l.y:
-                self.size -= root.l.x - root.x
-                root.x = root.l.x
+            if root.l is not None and root.x <= root.left.y:
+                self.size -= root.left.x - root.x
+                root.x = root.left.x
                 updated = True
 
-            root.r = self.remove(root.x, root.y, root.r)
-            root.l = self.remove(root.x, root.y, root.l)
+            root.right = self.remove(root.x, root.y, root.right)
+            root.left = self.remove(root.x, root.y, root.left)
             if updated:
                 root = self.add(x, y, root)
 
-        root.h = 1 + max(self.getHeight(root.l), self.getHeight(root.r))
+        root.height = 1 + max(self.getHeight(root.left), self.getHeight(root.right))
 
         b = self.getBal(root)
 
-        if b > 1 and y < root.l.x and self.getBal(root.l) > 0:
+        if b > 1 and y < root.left.x and self.getBal(root.left) > 0:
             self.root_tree = self.rRotate(root)
             return self.root_tree
 
-        if b < -1 and x > root.r.y and self.getBal(root.r) < 0:
+        if b < -1 and x > root.right.y and self.getBal(root.right) < 0:
             self.root_tree = self.lRotate(root)
             return self.root_tree
 
-        if b > 1 and x > root.l.y and self.getBal(root.l) < 0:
-            root.l = self.lRotate(root.l)
+        if b > 1 and x > root.left.y and self.getBal(root.left) < 0:
+            root.left = self.lRotate(root.left)
             self.root_tree = self.rRotate(root)
             return self.root_tree
 
-        if b < -1 and y < root.r.x and self.getBal(root.r) > 0:
-            root.r = self.rRotate(root.r)
+        if b < -1 and y < root.right.x and self.getBal(root.right) > 0:
+            root.right = self.rRotate(root.right)
             self.root_tree = self.lRotate(root)
             return self.root_tree
 
@@ -455,10 +481,10 @@ class IntervalUnionRestriction(ContinuousRestriction):
         self.draw -= root.y - root.x
         if self.draw > 0:
             result = None
-            if root.l is not None:
-                result = self.sample(root.l)
-            if not result and root.r is not None:
-                result = self.sample(root.r)
+            if root.left is not None:
+                result = self.sample(root.left)
+            if not result and root.right is not None:
+                result = self.sample(root.right)
             return result
         else:
             result = float(root.y + self.draw)
@@ -503,51 +529,51 @@ class IntervalUnionRestriction(ContinuousRestriction):
         elif x < root.x < y < root.y:
             self.size -= y - root.x
             root.x = y
-            root.l = self.remove(x, y, root.l, adjust_size)
+            root.left = self.remove(x, y, root.left, adjust_size)
         elif root.x < x < root.y < y:
             self.size -= root.y - x
             root.y = x
-            root.r = self.remove(x, y, root.r, adjust_size)
+            root.right = self.remove(x, y, root.right, adjust_size)
         elif y <= root.x:
-            root.l = self.remove(x, y, root.l, adjust_size)
+            root.left = self.remove(x, y, root.left, adjust_size)
         elif x >= root.y:
-            root.r = self.remove(x, y, root.r, adjust_size)
+            root.right = self.remove(x, y, root.right, adjust_size)
         else:
             if adjust_size:
                 self.size -= root.y - root.x
-            if root.l is None:
-                self.root_tree = self.remove(x, y, root.r, adjust_size)
+            if root.left is None:
+                self.root_tree = self.remove(x, y, root.right, adjust_size)
                 return self.root_tree
-            elif root.r is None:
-                self.root_tree = self.remove(x, y, root.l, adjust_size)
+            elif root.right is None:
+                self.root_tree = self.remove(x, y, root.left, adjust_size)
                 return self.root_tree
-            rgt = self.smallest_interval(root.r)
+            rgt = self.smallest_interval(root.right)
             root.x = rgt.x
             root.y = rgt.y
-            root.r = self.remove(rgt.x, rgt.y, root.r, adjust_size=False)
+            root.right = self.remove(rgt.x, rgt.y, root.right, adjust_size=False)
             root = self.remove(x, y, root, adjust_size)
         if not root:
             return None
 
-        root.h = 1 + max(self.getHeight(root.l), self.getHeight(root.r))
+        root.height = 1 + max(self.getHeight(root.left), self.getHeight(root.right))
 
         b = self.getBal(root)
 
-        if b > 1 and self.getBal(root.l) > 0:
+        if b > 1 and self.getBal(root.left) > 0:
             self.root_tree = self.rRotate(root)
             return self.root_tree
 
-        if b < -1 and self.getBal(root.r) < 0:
+        if b < -1 and self.getBal(root.right) < 0:
             self.root_tree = self.lRotate(root)
             return self.root_tree
 
-        if b > 1 and self.getBal(root.l) < 0:
-            root.l = self.lRotate(root.l)
+        if b > 1 and self.getBal(root.left) < 0:
+            root.left = self.lRotate(root.left)
             self.root_tree = self.rRotate(root)
             return self.root_tree
 
-        if b < -1 and self.getBal(root.r) > 0:
-            root.r = self.rRotate(root.r)
+        if b < -1 and self.getBal(root.right) > 0:
+            root.right = self.rRotate(root.right)
             self.root_tree = self.lRotate(root)
             return self.root_tree
 
@@ -563,14 +589,14 @@ class IntervalUnionRestriction(ContinuousRestriction):
         Returns:
             Updated parent Node
         """
-        y = z.r
-        T2 = y.l
+        y = z.right
+        T2 = y.left
 
-        y.l = z
-        z.r = T2
+        y.left = z
+        z.right = T2
 
-        z.h = 1 + max(self.getHeight(z.l), self.getHeight(z.r))
-        y.h = 1 + max(self.getHeight(y.l), self.getHeight(y.r))
+        z.height = 1 + max(self.getHeight(z.left), self.getHeight(z.right))
+        y.height = 1 + max(self.getHeight(y.left), self.getHeight(y.right))
 
         return y
 
@@ -583,14 +609,14 @@ class IntervalUnionRestriction(ContinuousRestriction):
         Returns:
             Updated parent Node
         """
-        y = z.l
-        T3 = y.r
+        y = z.left
+        T3 = y.right
 
-        y.r = z
-        z.l = T3
+        y.right = z
+        z.left = T3
 
-        z.h = 1 + max(self.getHeight(z.l), self.getHeight(z.r))
-        y.h = 1 + max(self.getHeight(y.l), self.getHeight(y.r))
+        z.height = 1 + max(self.getHeight(z.left), self.getHeight(z.right))
+        y.height = 1 + max(self.getHeight(y.left), self.getHeight(y.right))
 
         return y
 
@@ -598,7 +624,8 @@ class IntervalUnionRestriction(ContinuousRestriction):
         """Returns the height of a Node
 
         Args:
-            root: Node to return the height from or 'root' for the height of the whole tree, default is 'root'
+            root: Node to return the height from or 'root' for the height of the whole
+            tree, default is 'root'
 
         Returns:
             Integer indicating the height
@@ -609,13 +636,14 @@ class IntervalUnionRestriction(ContinuousRestriction):
         if not root:
             return 0
 
-        return root.h
+        return root.height
 
     def getBal(self, root: Node = "root"):
         """Calculates balance factor
 
         Args:
-            root: Node to calculate the balance factor for or 'root' for the balance factor of the whole tree,
+            root: Node to calculate the balance factor for or 'root' for the balance
+            factor of the whole tree,
             default is 'root'
 
         Returns:
@@ -627,7 +655,7 @@ class IntervalUnionRestriction(ContinuousRestriction):
         if not root:
             return 0
 
-        return self.getHeight(root.l) - self.getHeight(root.r)
+        return self.getHeight(root.left) - self.getHeight(root.right)
 
     def intervals(self):
         return self._intervals()
@@ -636,7 +664,8 @@ class IntervalUnionRestriction(ContinuousRestriction):
         """Returns all intervals of the action space ordered
 
         Args:
-            root: Node to start the search from or 'root' for searching the whole tree, default is 'root'
+            root: Node to start the search from or 'root' for searching the whole tree,
+            default is 'root'
 
         Returns:
             List of tuples containing the ordered intervals. For example:
@@ -650,11 +679,11 @@ class IntervalUnionRestriction(ContinuousRestriction):
             return []
 
         ordered = []
-        if root.l is not None:
-            ordered = ordered + self._intervals(root.l)
+        if root.left is not None:
+            ordered = ordered + self._intervals(root.left)
         ordered.append((float(root.x), float(root.y)))
-        if root.r is not None:
-            ordered = ordered + self._intervals(root.r)
+        if root.right is not None:
+            ordered = ordered + self._intervals(root.right)
         return ordered
 
     def __str__(self):
@@ -738,7 +767,8 @@ class BucketSpace(ContinuousRestriction):
         return space
 
     def clone_and_remove(self, x):
-        """Returns a copy of the action space in which buckets containing a specific value are removed
+        """Returns a copy of the action space in which buckets containing a specific
+        value are removed
 
         Args:
             x: Buckets containing this value should be removed from the action space
@@ -868,6 +898,9 @@ class BucketSpace(ContinuousRestriction):
 
 
 class PredicateRestriction(Restriction):
+    """Represents a restriction of an arbitrary space as the set of elements for which
+    a predicate is True.
+    """
     def __init__(
             self,
             base_space: gym.Space,
@@ -883,7 +916,7 @@ class PredicateRestriction(Restriction):
     def is_np_flattenable(self) -> bool:
         return False
 
-    def sample(self, mask=None) -> int:
+    def sample(self, mask: Any | None = None) -> int:
         raise NotImplementedError
 
     def contains(self, x: Any) -> bool:
