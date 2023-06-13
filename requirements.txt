@@ -1,8 +1,8 @@
-pettingzoo
-torch
-gymnasium
-shapely
-numpy
-seaborn
-pygame
-tqdm
+pettingzoo~=1.23.1
+torch~=2.0.1
+gymnasium~=0.28.1
+shapely~=2.0.1
+numpy~=1.24.3
+seaborn~=0.12.2
+pygame~=2.4.0
+tqdm~=4.65.0
