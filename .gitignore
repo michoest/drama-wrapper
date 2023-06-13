@@ -16,3 +16,6 @@ __pycache__
 
 .venv
 **/__pycache__
+
+# Graphs from example notebooks
+examples/*/*.pdf
