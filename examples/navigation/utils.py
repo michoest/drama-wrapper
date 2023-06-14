@@ -54,7 +54,8 @@ def render(vis_policy, env_config, restriction_violation_fns, seed):
                                           max_angle=110.0)
     vis_env = RestrictionWrapper(NavigationEnvironment(env_config),
                                  vis_restrictor,
-                                 restriction_violation_fns=restriction_violation_fns)
+                                 restriction_violation_fns=restriction_violation_fns,
+                                 return_object=True)
     vis_width = vis_env.env.WIDTH
     vis_height = vis_env.env.HEIGHT
 

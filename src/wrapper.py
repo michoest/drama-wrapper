@@ -277,6 +277,6 @@ class RestrictionWrapper(BaseWrapper):
                 self.observation_key: super().observe(agent),
                 self.restriction_key: self.restrictions[agent]
                 if return_object and self.restrictions[agent].is_np_flattenable
-                else flatten(self.restrictors[agent].action_space,
+                else flatten(self.restrictors[self.agent_restrictor_mapping[agent]].action_space,
                              self.restrictions[agent], **{**self.kwargs, **kwargs})
             }
