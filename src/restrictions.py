@@ -38,7 +38,7 @@ class Restriction(ABC, gym.Space):
         return f"{self.__class__.__name__}"
 
 
-class DiscreteRestriction(Restriction):
+class DiscreteRestriction(Restriction, ABC):
     """Represents a restriction of a `Discrete` space.
     """
     def __init__(
@@ -50,7 +50,7 @@ class DiscreteRestriction(Restriction):
         super().__init__(base_space, seed=seed)
 
 
-class ContinuousRestriction(Restriction):
+class ContinuousRestriction(Restriction, ABC):
     """Represents a restriction of a `Box` space.
     """
     def __init__(
@@ -693,8 +693,8 @@ class IntervalUnionRestriction(ContinuousRestriction):
         return self.__str__()
 
 
-class BucketSpace(ContinuousRestriction):
-    """Interval Action Space as predefined buckets"""
+class BucketSpaceRestriction(ContinuousRestriction):
+    """Interval Action Space as predefined buckets."""
 
     @property
     def is_np_flattenable(self) -> bool:
@@ -757,7 +757,7 @@ class BucketSpace(ContinuousRestriction):
         Returns:
             space: Action space copy
         """
-        space = BucketSpace(
+        space = BucketSpaceRestriction(
             self.a,
             self.b,
             bucket_width=float(self.bucket_width),
