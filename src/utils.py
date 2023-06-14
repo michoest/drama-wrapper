@@ -147,14 +147,23 @@ def _unflatten_discrete_set_action_space(
 def _unflatten_discrete_vector_action_space(
     space: DiscreteVectorActionSpace, x: FlatType
 ) -> DiscreteVectorRestriction:
-    return DiscreteVectorRestriction(space.base_space, allowed_actions=list(x))
+    return DiscreteVectorRestriction(space.base_space, allowed_actions=np.array(x))
 
 
 @unflatten.register(IntervalUnionActionSpace)
-def _unflatten_interval_union_action_space(
-    space: IntervalUnionActionSpace, x: FlatType
-) -> IntervalUnionRestriction:
-    raise NotImplementedError
+def _unflatten_interval_union_action_space(space: IntervalUnionActionSpace, x: FlatType) -> T:
+    unpadded_intervals = np.array([[x[i], x[i+1]] for i in range(0, len(x), 2) if x[i] != x[i+1]]).flatten()
+    interval_union_space = IntervalUnionRestriction(space.base_space)
+    for i in list(range(0, len(unpadded_intervals)+2, 2)):
+        if i == 0:
+            if unpadded_intervals[i] != space.base_space.low.item():
+                interval_union_space.remove(space.base_space.low[0], unpadded_intervals[i - 1])
+        elif i == len(unpadded_intervals):
+            if unpadded_intervals[i-1] != space.base_space.high.item():
+                interval_union_space.remove(unpadded_intervals[i - 1], space.base_space.high.item())
+        else:
+            interval_union_space.remove(unpadded_intervals[i - 1], unpadded_intervals[i])
+    return interval_union_space
 
 
 @unflatten.register(BucketSpaceActionSpace)
