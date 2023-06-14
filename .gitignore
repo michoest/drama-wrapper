@@ -19,3 +19,6 @@ __pycache__
 
 # Graphs from example notebooks
 examples/*/*.pdf
+
+# Testbed for new features
+examples/playground.ipynb
