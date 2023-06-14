@@ -16,6 +16,7 @@ from src.restrictions import (
     Restriction,
     IntervalUnionRestriction,
     DiscreteVectorRestriction,
+    DiscreteSetRestriction,
 )
 
 
@@ -54,7 +55,29 @@ class Restrictor(ABC):
 
 
 class DiscreteSetActionSpace(RestrictorActionSpace):
-    pass
+    def __init__(self, base_space: Discrete):
+        super().__init__(base_space)
+
+    @property
+    def is_np_flattenable(self) -> bool:
+        return True
+
+    def sample(self, mask: Any | None = None) -> DiscreteSetRestriction:
+        assert isinstance(self.base_space, Discrete)
+
+        discrete_set = DiscreteSetRestriction(
+            self.base_space,
+            allowed_actions={
+                action
+                for action, allowed in zip(
+                    range(self.base_space.n),
+                    np.random.choice([True, False], self.base_space.n),
+                )
+                if allowed
+            },
+        )
+
+        return discrete_set
 
 
 class DiscreteVectorActionSpace(RestrictorActionSpace):
