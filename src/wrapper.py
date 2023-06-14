@@ -50,7 +50,9 @@ class RestrictionWrapper(BaseWrapper):
             postprocess_restriction_fns: Union[dict, Callable] = None,
             restriction_violation_fns: Union[dict, Callable] = None,
             restriction_key: str = "restriction",
-            observation_key: str = "observation"
+            observation_key: str = "observation",
+            return_object: bool = True,
+            **kwargs
     ):
         if isinstance(restrictors, dict):
             assert agent_restrictor_mapping, 'Agent-restrictor mapping required!'
@@ -110,6 +112,8 @@ class RestrictionWrapper(BaseWrapper):
 
         self.restriction_key = restriction_key
         self.observation_key = observation_key
+        self.return_object = return_object
+        self.kwargs = {**kwargs}
 
         # self.restrictions is a dictionary which keeps the latest value for each agent
         self.restrictions = None
@@ -264,13 +268,14 @@ class RestrictionWrapper(BaseWrapper):
                     self.env.agent_selection
                 ]
 
-    def observe(self, agent: str, return_object: bool = True, **kwargs):
+    def observe(self, agent: str, return_object: bool = None, **kwargs):
         if agent in self.restrictors:
             return self.preprocess_restrictor_observation_fns[agent](self.env)
         else:
+            return_object = return_object if return_object is not None else self.return_object
             return {
                 self.observation_key: super().observe(agent),
                 self.restriction_key: self.restrictions[agent]
                 if return_object else flatten(self.restrictors[agent].action_space,
-                                              self.restrictions[agent], **kwargs)
+                                              self.restrictions[agent], **{**self.kwargs, **kwargs})
             }
