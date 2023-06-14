@@ -1,4 +1,5 @@
 # Typing
+import math
 from typing import Any, Union
 
 # Standard modules
@@ -16,7 +17,7 @@ from src.restrictions import (
     Restriction,
     IntervalUnionRestriction,
     DiscreteVectorRestriction,
-    DiscreteSetRestriction,
+    DiscreteSetRestriction, BucketSpaceRestriction,
 )
 
 
@@ -67,14 +68,7 @@ class DiscreteSetActionSpace(RestrictorActionSpace):
 
         discrete_set = DiscreteSetRestriction(
             self.base_space,
-            allowed_actions={
-                action
-                for action, allowed in zip(
-                    range(self.base_space.n),
-                    np.random.choice([True, False], self.base_space.n),
-                )
-                if allowed
-            },
+            allowed_actions=set(np.where(np.random.choice([True, False], self.base_space.n) is True)),
         )
 
         return discrete_set
