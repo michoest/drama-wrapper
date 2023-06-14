@@ -1,12 +1,17 @@
-from abc import ABC
+# Typing
 from typing import Any, Union
 
+# Standard modules
+from abc import ABC
+
+# External modules
 import gymnasium as gym
 import numpy as np
 import torch
 from gymnasium.spaces import Box, Discrete
 from pettingzoo import AECEnv
 
+# Internal modules
 from src.restrictions import (
     Restriction,
     IntervalUnionRestriction,
@@ -48,6 +53,29 @@ class Restrictor(ABC):
         raise NotImplementedError
 
 
+class DiscreteSetActionSpace(RestrictorActionSpace):
+    pass
+
+
+class DiscreteVectorActionSpace(RestrictorActionSpace):
+    def __init__(self, base_space: Discrete):
+        super().__init__(base_space)
+
+    @property
+    def is_np_flattenable(self) -> bool:
+        return True
+
+    def sample(self, mask: Any | None = None) -> DiscreteVectorRestriction:
+        assert isinstance(self.base_space, Discrete)
+
+        discrete_vector = DiscreteVectorRestriction(
+            self.base_space,
+            allowed_actions=np.random.choice([True, False], self.base_space.n),
+        )
+
+        return discrete_vector
+
+
 class IntervalUnionActionSpace(RestrictorActionSpace):
     def __init__(self, base_space: Box):
         super().__init__(base_space)
@@ -73,20 +101,9 @@ class IntervalUnionActionSpace(RestrictorActionSpace):
         return interval_union
 
 
-class DiscreteVectorActionSpace(RestrictorActionSpace):
-    def __init__(self, base_space: Discrete):
-        super().__init__(base_space)
+class BucketSpaceActionSpace(RestrictorActionSpace):
+    pass
 
-    @property
-    def is_np_flattenable(self) -> bool:
-        return True
 
-    def sample(self, mask: Any | None = None) -> DiscreteVectorRestriction:
-        assert isinstance(self.base_space, Discrete)
-
-        discrete_vector = DiscreteVectorRestriction(
-            self.base_space,
-            allowed_actions=np.random.choice([True, False], self.base_space.n),
-        )
-
-        return discrete_vector
+class PredicateActionSpace(RestrictorActionSpace):
+    pass
