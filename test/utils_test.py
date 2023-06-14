@@ -43,5 +43,21 @@ class DiscreteSetActionSpaceTest(unittest.TestCase):
         self.assertTrue(unflatten(self.s2, np.array([2, 4])) == self.r2)
 
 
+class DiscreteVectorActionSpaceTest(unittest.TestCase):
+    pass
+
+
+class IntervalUnionActionSpaceTest(unittest.TestCase):
+    pass
+
+
+class BucketSpaceActionSpaceTest(unittest.TestCase):
+    pass
+
+
+class PredicateActionSpaceTest(unittest.TestCase):
+    pass
+
+
 if __name__ == '__main__':
     unittest.main()
