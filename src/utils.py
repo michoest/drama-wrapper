@@ -95,10 +95,9 @@ def _flatten_interval_union_restriction(
 
 
 @flatten.register(BucketSpaceActionSpace)
-def _flatten_bucket_space_action_space(
-    space: BucketSpaceActionSpace, x: BucketSpaceRestriction
-):
-    raise NotImplementedError
+def _flatten_bucket_space_action_space(space: BucketSpaceActionSpace, x: BucketSpaceRestriction):
+    return np.concatenate([np.array([space.base_space.low.item(), space.base_space.high.item(),
+                                     space.number_of_buckets]), x.buckets])
 
 
 # flatdim functions for restriction classes
@@ -128,7 +127,7 @@ def _flatdim_graph(space: IntervalUnionActionSpace):
 
 @flatdim.register(BucketSpaceActionSpace)
 def _flatdim_bucket_space_action_space(space: BucketSpaceActionSpace) -> int:
-    raise NotImplementedError
+    return space.number_of_buckets + 3
 
 
 # unflatten functions for restriction classes
@@ -159,7 +158,6 @@ def _unflatten_interval_union_action_space(
 
 
 @unflatten.register(BucketSpaceActionSpace)
-def _unflatten_bucket_space_action_space(
-    space: BucketSpaceActionSpace, x: FlatType
-) -> BucketSpaceRestriction:
-    raise NotImplementedError
+def _unflatten_bucket_space_action_space(space: BucketSpaceActionSpace, x: FlatType) -> BucketSpaceRestriction:
+    return BucketSpaceRestriction(space.base_space, space.bucket_width, space.epsilon,
+                                  x[3:])

@@ -711,22 +711,25 @@ class BucketSpaceRestriction(ContinuousRestriction):
         return True
 
     def __init__(
-        self,
-        low: SupportsFloat,
-        high: SupportsFloat,
-        bucket_width=1.0,
-        epsilon=0.01,
-        dtype: Union[type[np.floating[Any]], type[np.integer[Any]]] = np.float32,
-        seed: Optional[Union[int, np.random.Generator]] = None,
+            self,
+            base_space: Box,
+            bucket_width=1.0,
+            epsilon=0.01,
+            available_buckets: np.ndarray = None
     ) -> None:
-        super().__init__(low, high, dtype, seed)
+        super().__init__(base_space)
+        assert isinstance(self.base_space, Box)
 
-        self.a, self.b = Decimal(f"{self.low[0]}"), Decimal(f"{self.high[0]}")
-        self.bucket_width, self.epsilon = Decimal(f"{bucket_width}"), Decimal(
-            f"{epsilon}"
-        )
+        self.a, self.b = Decimal(f"{self.base_space.low.item()}"), Decimal(f"{self.base_space.high.item()}")
+        self.bucket_width, self.epsilon = Decimal(f"{bucket_width}"), Decimal(f"{epsilon}")
         self.number_of_buckets = math.ceil((self.b - self.a) / self.bucket_width)
-        self.buckets = np.ones((self.number_of_buckets,), dtype=bool)
+
+        if available_buckets:
+            assert len(available_buckets) == self.number_of_buckets, 'Not all available bucket indicators provided!'
+            assert np.all([index in [1.0, 0.0] for index in available_buckets]), 'No boolean bucket indicators!'
+            self.buckets = available_buckets
+        else:
+            self.buckets = np.ones((self.number_of_buckets,), dtype=bool)
 
     def contains(self, x):
         """Determines if a number is part of the action space
@@ -767,14 +770,14 @@ class BucketSpaceRestriction(ContinuousRestriction):
         Returns:
             space: Action space copy
         """
-        space = BucketSpaceRestriction(
-            self.a,
-            self.b,
+        assert isinstance(self.base_space, Box)
+
+        return BucketSpaceRestriction(
+            self.base_space,
             bucket_width=float(self.bucket_width),
             epsilon=float(self.epsilon),
+            available_buckets=self.buckets
         )
-        space.buckets = np.copy(self.buckets)
-        return space
 
     def clone_and_remove(self, x):
         """Returns a copy of the action space in which buckets containing a specific
