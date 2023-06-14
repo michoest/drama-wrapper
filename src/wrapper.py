@@ -51,7 +51,7 @@ class RestrictionWrapper(BaseWrapper):
             restriction_violation_fns: Union[dict, Callable] = None,
             restriction_key: str = "restriction",
             observation_key: str = "observation",
-            return_object: bool = True,
+            return_object: bool = False,
             **kwargs
     ):
         if isinstance(restrictors, dict):
@@ -276,6 +276,7 @@ class RestrictionWrapper(BaseWrapper):
             return {
                 self.observation_key: super().observe(agent),
                 self.restriction_key: self.restrictions[agent]
-                if return_object else flatten(self.restrictors[agent].action_space,
-                                              self.restrictions[agent], **{**self.kwargs, **kwargs})
+                if return_object and self.restrictions[agent].is_np_flattenable
+                else flatten(self.restrictors[agent].action_space,
+                             self.restrictions[agent], **{**self.kwargs, **kwargs})
             }
