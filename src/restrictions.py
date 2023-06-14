@@ -183,7 +183,7 @@ class IntervalUnionRestriction(ContinuousRestriction):
     def __contains__(self, item):
         return self.contains(item)
 
-    def contains(self, x: float, root: object = "root"):
+    def contains(self, x: Union[np.array, float], root: object = "root"):
         """Determines if a number is part of the action space
 
         Args:
@@ -196,6 +196,10 @@ class IntervalUnionRestriction(ContinuousRestriction):
         """
         if root == "root":
             root = self.root_tree
+
+        if isinstance(x, np.ndarray):
+            x = x.item()
+
         x = Decimal(f"{x}")
 
         if not root:
