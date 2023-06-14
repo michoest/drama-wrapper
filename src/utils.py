@@ -1,19 +1,31 @@
+# Typing
 from typing import Any
 
+# Standard modules
 from collections import OrderedDict
 from functools import singledispatch
 
+# External modules
 import gymnasium.spaces.utils
 import numpy as np
+from numpy.typing import NDArray
 from gymnasium import Space
 from gymnasium.spaces import Dict
-from gymnasium.spaces.utils import FlatType
+from gymnasium.spaces.utils import FlatType, T
 
-from src.restrictions import IntervalUnionRestriction, DiscreteVectorRestriction
-
-from gymnasium.spaces.utils import T
-
-from src.restrictors import IntervalUnionActionSpace, DiscreteVectorActionSpace
+# Internal modules
+from src.restrictions import (
+    DiscreteSetRestriction,
+    DiscreteVectorRestriction,
+    IntervalUnionRestriction,
+    BucketSpaceRestriction,
+)
+from src.restrictors import (
+    DiscreteSetActionSpace,
+    DiscreteVectorActionSpace,
+    IntervalUnionActionSpace,
+    BucketSpaceActionSpace,
+)
 
 
 class IntervalsOutOfBoundException(Exception):
@@ -38,13 +50,35 @@ def _flatten_dict(space: Dict, x: T, **kwargs):
         return np.concatenate(
             [np.array(flatten(s, x[key], **kwargs)) for key, s in space.spaces.items()]
         )
-    return OrderedDict((key, flatten(s, x[key], **kwargs)) for key, s in space.spaces.items())
+    return OrderedDict(
+        (key, flatten(s, x[key], **kwargs)) for key, s in space.spaces.items()
+    )
+
+
+@flatten.register(DiscreteSetActionSpace)
+def _flatten_discrete_set_action_space(
+    space: DiscreteSetActionSpace, x: DiscreteSetRestriction
+) -> NDArray:
+    return np.asarray(list(x.allowed_actions), dtype=space.dtype)
+
+
+@flatten.register(DiscreteVectorActionSpace)
+def _flatten_discrete_vector_action_space(
+    space: DiscreteVectorActionSpace, x: DiscreteVectorRestriction
+):
+    return np.asarray(x.allowed_actions, dtype=space.dtype)
 
 
 @flatten.register(IntervalUnionActionSpace)
-def _flatten_interval_union_restriction(space: IntervalUnionActionSpace, x: IntervalUnionRestriction,
-                                        pad: bool = True, clamp: bool = True, max_len: int = 7,
-                                        pad_value: float = 0.0, raise_error: bool = True):
+def _flatten_interval_union_restriction(
+    space: IntervalUnionActionSpace,
+    x: IntervalUnionRestriction,
+    pad: bool = True,
+    clamp: bool = True,
+    max_len: int = 7,
+    pad_value: float = 0.0,
+    raise_error: bool = True,
+):
     intervals = np.array(x.intervals(), dtype=np.float32)
     if raise_error and intervals.shape[0] > max_len:
         raise IntervalsOutOfBoundException
@@ -52,14 +86,19 @@ def _flatten_interval_union_restriction(space: IntervalUnionActionSpace, x: Inte
         intervals = intervals[:max_len]
     if pad:
         padding = np.full((max_len - intervals.shape[0], 2), pad_value)
-        return np.concatenate([intervals, padding], axis=0, dtype=np.float32).flatten() \
-            if len(intervals) > 0 else padding.flatten()
+        return (
+            np.concatenate([intervals, padding], axis=0, dtype=np.float32).flatten()
+            if len(intervals) > 0
+            else padding.flatten()
+        )
     return intervals.flatten()
 
 
-@flatten.register(DiscreteVectorActionSpace)
-def _flatten_discrete_vector_action_space(space: DiscreteVectorActionSpace, x: DiscreteVectorRestriction):
-    return np.asarray(x.allowed_actions, dtype=space.dtype).flatten()
+@flatten.register(BucketSpaceActionSpace)
+def _flatten_bucket_space_action_space(
+    space: BucketSpaceActionSpace, x: BucketSpaceRestriction
+):
+    raise NotImplementedError
 
 
 # flatdim functions for restriction classes
@@ -68,10 +107,28 @@ def flatdim(space: Space[Any]) -> int:
     return gymnasium.spaces.utils.flatdim(space)
 
 
+@flatdim.register(DiscreteSetActionSpace)
+def _flatdim_discrete_set_action_space(space: DiscreteSetActionSpace):
+    raise ValueError(
+        "Cannot get flattened size as the DiscreteSetActionSpace has a dynamic size."
+    )
+
+
 @flatdim.register(DiscreteVectorActionSpace)
 def _flatdim_discrete_vector_action_space(space: DiscreteVectorActionSpace) -> int:
-    # print('_flatdim_discrete_vector_action_space')
     return space.base_space.n
+
+
+@flatdim.register(IntervalUnionActionSpace)
+def _flatdim_graph(space: IntervalUnionActionSpace):
+    raise ValueError(
+        "Cannot get flattened size as the IntervalUnionActionSpace has a dynamic size."
+    )
+
+
+@flatdim.register(BucketSpaceActionSpace)
+def _flatdim_bucket_space_action_space(space: BucketSpaceActionSpace) -> int:
+    raise NotImplementedError
 
 
 # unflatten functions for restriction classes
@@ -80,6 +137,29 @@ def unflatten(space: Space[T], x: FlatType) -> T:
     return gymnasium.spaces.utils.unflatten(space, x)
 
 
+@unflatten.register(DiscreteSetActionSpace)
+def _unflatten_discrete_set_action_space(
+    space: DiscreteSetActionSpace, x: FlatType
+) -> DiscreteSetRestriction:
+    return DiscreteSetRestriction(space.base_space, allowed_actions=set(x))
+
+
 @unflatten.register(DiscreteVectorActionSpace)
-def _unflatten_discrete_vector_action_space(space: DiscreteVectorActionSpace, x: FlatType) -> T:
-    return DiscreteVectorRestriction(space.base_space, allowed_actions=x)
+def _unflatten_discrete_vector_action_space(
+    space: DiscreteVectorActionSpace, x: FlatType
+) -> DiscreteVectorRestriction:
+    return DiscreteVectorRestriction(space.base_space, allowed_actions=list(x))
+
+
+@unflatten.register(IntervalUnionActionSpace)
+def _unflatten_interval_union_action_space(
+    space: IntervalUnionActionSpace, x: FlatType
+) -> IntervalUnionRestriction:
+    raise NotImplementedError
+
+
+@unflatten.register(BucketSpaceActionSpace)
+def _unflatten_bucket_space_action_space(
+    space: BucketSpaceActionSpace, x: FlatType
+) -> BucketSpaceRestriction:
+    raise NotImplementedError
