@@ -23,7 +23,8 @@ The full documentation of the code can be found at XXX.
 Citation
 ========
 
-To cite this project in a publication, please Usage
+To cite this project in a publication, please use
+
 .. code-block:: rst
     @misc{oesterle-2023-drama,
         author = {Oesterle, Michael and Grams, Tim},
