@@ -25,7 +25,8 @@ Citation
 
 To cite this project in a publication, please use
 
-.. code-block:: rst
+.. code-block:: 
+    
     @misc{oesterle-2023-drama,
         author = {Oesterle, Michael and Grams, Tim},
         title = {DRAMA},
