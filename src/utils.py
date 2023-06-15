@@ -19,6 +19,7 @@ from src.restrictions import (
     DiscreteVectorRestriction,
     IntervalUnionRestriction,
     BucketSpaceRestriction,
+    Restriction,
 )
 from src.restrictors import (
     DiscreteSetActionSpace,
@@ -36,6 +37,14 @@ class IntervalsOutOfBoundException(Exception):
 class RestrictionViolationException(Exception):
     def __init__(self, *args) -> None:
         super().__init__(*args)
+
+
+def random_replacement_violation_fn(env, action, restriction: Restriction):
+    env.step(restriction.sample())
+
+
+def projection_violation_fn(env, action, restriction: IntervalUnionRestriction):
+    env.step(np.array([restriction.nearest_element(action.item())], dtype=np.float32))
 
 
 # flatten functions for restriction classes

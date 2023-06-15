@@ -4,11 +4,10 @@ from matplotlib import pyplot as plt
 
 from examples.navigation.env import NavigationEnvironment
 from examples.navigation.restrictor import NavigationRestrictor
-from src.restrictions import IntervalUnionRestriction
 from src.wrapper import RestrictionWrapper
 
 
-def do_nothing_on_invalid(env, action, restriction):
+def do_nothing_on_invalid_violation_fn(env, action, restriction):
     env._cumulative_rewards = {'agent_0': 0.0}
     env.rewards = {'agent_0': 0.0}
     env.trajectory.append([float(env.agent.x),
@@ -16,10 +15,6 @@ def do_nothing_on_invalid(env, action, restriction):
     env.current_step += 1
     if env.current_step >= env.STEPS_PER_EPISODE:
         env.truncations = {'agent_0': True}
-
-
-def projection(env, action, restriction: IntervalUnionRestriction):
-    env.step(np.array([restriction.nearest_element(action[0])], dtype=np.float32))
 
 
 def render(vis_policy, env_config, restriction_violation_fns, seed):
