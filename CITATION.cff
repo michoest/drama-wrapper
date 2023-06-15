@@ -1,0 +1,29 @@
+cff-version: 1.2.0
+title: DRAMA
+message: >-
+  If you use this software, please cite it using the
+  metadata from this file.
+type: software
+authors:
+  - given-names: Michael
+    family-names: Oesterle
+    email: michael.oesterle@uni-mannheim.de
+    affiliation: University of Mannheim
+    orcid: 'https://orcid.org/0000-0001-6939-1028'
+  - given-names: Tim
+    family-names: Grams
+    email: tim.grams339@outlook.de
+    affiliation: University of Mannheim
+    orcid: 'https://orcid.org/0009-0001-0248-0875'
+repository-code: 'https://github.com/michoest/hicss-2024'
+abstract: >-
+  A PettingZoo-compatible framework for dynamically
+  restricted action spaces for Multi-Agent Reinforcement
+  Learning (MARL) frameworks.
+keywords:
+  - Multi-Agent Reinforcement Learning
+  - Gymnasium
+  - PettingZoo
+  - Multi-Agent System
+  - Action Space Restriction
+license: MIT
