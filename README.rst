@@ -23,7 +23,7 @@ Usage
 
 In analogy to the AEC of *PettingZoo*
 
-::
+.. code-block:: python
 
    env.reset()
    for agent in env.agent_iter():
@@ -33,7 +33,8 @@ In analogy to the AEC of *PettingZoo*
 
 the *DRAMA* loop can be imported and used as follows:
 
-::
+.. code-block:: python
+
    from drama.restrictors import Restrictor
    from drama.wrapper import RestrictionWrapper
 

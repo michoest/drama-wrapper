@@ -17,25 +17,59 @@ from drama.utils import flatten
 
 # If no functions are provided for some or all restrictors, use these defaults
 def _default_restrictor_reward_fn(env, rewards):
+    """Default restrictor reward function as the social welfare.
+
+    Args:
+        env: The environment after the agent step was taken
+        rewards: The rewards of each agent
+
+    Returns:
+        The restrictor reward
+    """
     return sum(rewards.values())
 
 
 def _default_preprocess_restrictor_observation_fn(env):
+    """Default pre-processing of the restrictor observation.
+
+    Args:
+        env: The environment at the point in time
+
+    Returns:
+        The restrictor observation
+    """
     return env.state()
 
 
 def _default_postprocess_restriction_fn(restriction):
+    """Default post-processing of the restriction.
+
+    Args:
+        restriction: The restriction derived from the restrictor
+
+    Returns:
+        The post-processed restriction
+    """
     return restriction
 
 
 def _default_restriction_violation_fn(env, action, restriction: Restriction):
+    """Default handling of restriction violations.
+
+    Args:
+        env: The environment after the agent step was taken
+        action: The action which violated the restriction
+        restriction: The restriction object corresponding to the action
+
+    Returns:
+        The restrictor observation
+    """
     env.step(restriction.sample())
 
 
 class RestrictionWrapper(BaseWrapper):
-    """Wrapper to extend the environment with one or more restrictor agents.
+    """Wrapper that implements the agent-restrictor-environment loop of DRAMA:
 
-    Extended Agent-Environment Cycle:
         Reset() -> Restrictor of Agent_0
         Step() -> Agent_0
         Step() -> Restrictor of Agent_1
@@ -50,7 +84,7 @@ class RestrictionWrapper(BaseWrapper):
         restrictors: Union[dict, Restrictor],
         *,
         agent_restrictor_mapping: Optional[dict] = None,
-        restrictor_reward_fns: Union[dict, Callable, None] = None,
+        restrictor_reward_fns: Union[dict, Callable] = None,
         preprocess_restrictor_observation_fns: Union[dict, Callable] = None,
         postprocess_restriction_fns: Union[dict, Callable] = None,
         restriction_violation_fns: Union[dict, Callable] = None,
@@ -59,6 +93,37 @@ class RestrictionWrapper(BaseWrapper):
         return_object: bool = False,
         **kwargs,
     ):
+        """Constructor of :class:`RestrictionWrapper`.
+
+        Args:
+            env: The environment to apply the wrapper
+            restrictors: The restrictors to apply before each agent's step.
+                :class:`Dictionary` mapping IDs to restrictors or :class:`Restrictor` with default ID `restrictor_0`
+            agent_restrictor_mapping: The assignment of restrictors to agents.
+                :class:`Dictionary` mapping agent to restrictor IDs.
+                By default, a single restrictor is assigned to all agents
+            restrictor_reward_fns: The reward function for each restrictor.
+                :class:`Dictionary` mapping restrictor IDs to reward functions
+                or :class:`Callable` applied to all restrictor rewards.
+                By default, the social welfare is used
+            preprocess_restrictor_observation_fns: The pre-processing function for each restrictor observation.
+                :class:`Dictionary` mapping restrictor IDs to pre-processing functions
+                or :class:`Callable` applied to derive all restrictor observations likewise.
+                By default, the state of the environment is returned
+            postprocess_restriction_fns: The post-processing function for each restriction.
+                :class:`Dictionary` mapping restrictor IDs to post-processing functions
+                or :class:`Callable` applied to post-process all restrictions likewise.
+                By default, the unmodified restrictions apply
+            restriction_violation_fns: The callback to handle restriction violations.
+                :class:`Dictionary` mapping restrictor IDs to violation functions
+                or :class:`Callable` applied to all restriction violations.
+                By default, a :class:`RestrictionViolationException` is raised
+            restriction_key: Key for the restriction in the agent observation
+            observation_key: Key for the original observation in the agent observation
+            return_object: If `True`, the restriction object will be returned.
+                Otherwise, if possible, the restriction object is flattened
+            **kwargs: Additional arguments for the flatten operation
+        """
         super().__init__(env)
 
         if isinstance(restrictors, dict):
@@ -170,6 +235,7 @@ class RestrictionWrapper(BaseWrapper):
 
     @functools.lru_cache(maxsize=None)
     def observation_space(self, agent):
+        """Takes in agent or restrictor and returns the observation space for that agent or restrictor."""
         if agent in self.restrictors:
             return self.restrictors[agent].observation_space
         else:
@@ -184,12 +250,14 @@ class RestrictionWrapper(BaseWrapper):
 
     @functools.lru_cache(maxsize=None)
     def action_space(self, agent):
+        """Takes in agent or restrictor and returns the action space for that agent or restrictor."""
         if agent in self.restrictors:
             return self.restrictors[agent].action_space
         else:
             return self.env.action_space(agent)
 
     def reset(self, seed=None, options=None):
+        """Resets the agent-restrictor-environment loop to a starting state."""
         self.env.reset(seed, options)
 
         # Set properties
@@ -224,6 +292,10 @@ class RestrictionWrapper(BaseWrapper):
         self.agent_selection = self.agent_restrictor_mapping[self.env.agent_selection]
 
     def step(self, action):
+        """Accepts and executes the action or restriction of the current agent_selection in the environment.
+
+        Automatically switches control between the agents and restrictors.
+        """
         if self.agent_selection in self.restrictors:
             # If the action was taken by the restrictor, check if it was terminated
             # last step
@@ -312,6 +384,10 @@ class RestrictionWrapper(BaseWrapper):
                 ]
 
     def observe(self, agent: str, return_object: bool = None, **kwargs):
+        """Returns the observation an agent or restrictor currently can make.
+
+        `last()` calls this function.
+        """
         if agent in self.restrictors:
             return self.preprocess_restrictor_observation_fns[agent](self.env)
         else:
