@@ -104,9 +104,21 @@ def _flatten_interval_union_restriction(
 
 
 @flatten.register(BucketSpaceActionSpace)
-def _flatten_bucket_space_action_space(space: BucketSpaceActionSpace, x: BucketSpaceRestriction):
-    return np.concatenate([np.array([space.base_space.low.item(), space.base_space.high.item(),
-                                     space.number_of_buckets]), x.buckets])
+def _flatten_bucket_space_action_space(
+    space: BucketSpaceActionSpace, x: BucketSpaceRestriction
+):
+    return np.concatenate(
+        [
+            np.array(
+                [
+                    space.base_space.low.item(),
+                    space.base_space.high.item(),
+                    space.number_of_buckets,
+                ]
+            ),
+            x.buckets,
+        ]
+    )
 
 
 # flatdim functions for restriction classes
@@ -160,22 +172,35 @@ def _unflatten_discrete_vector_action_space(
 
 
 @unflatten.register(IntervalUnionActionSpace)
-def _unflatten_interval_union_action_space(space: IntervalUnionActionSpace, x: FlatType) -> T:
-    unpadded_intervals = np.array([[x[i], x[i+1]] for i in range(0, len(x), 2) if x[i] != x[i+1]]).flatten()
+def _unflatten_interval_union_action_space(
+    space: IntervalUnionActionSpace, x: FlatType
+) -> T:
+    unpadded_intervals = np.array(
+        [[x[i], x[i + 1]] for i in range(0, len(x), 2) if x[i] != x[i + 1]]
+    ).flatten()
     interval_union_space = IntervalUnionRestriction(space.base_space)
-    for i in list(range(0, len(unpadded_intervals)+2, 2)):
+    for i in list(range(0, len(unpadded_intervals) + 2, 2)):
         if i == 0:
             if unpadded_intervals[i] != space.base_space.low.item():
-                interval_union_space.remove(space.base_space.low[0], unpadded_intervals[i - 1])
+                interval_union_space.remove(
+                    space.base_space.low[0], unpadded_intervals[i - 1]
+                )
         elif i == len(unpadded_intervals):
-            if unpadded_intervals[i-1] != space.base_space.high.item():
-                interval_union_space.remove(unpadded_intervals[i - 1], space.base_space.high.item())
+            if unpadded_intervals[i - 1] != space.base_space.high.item():
+                interval_union_space.remove(
+                    unpadded_intervals[i - 1], space.base_space.high.item()
+                )
         else:
-            interval_union_space.remove(unpadded_intervals[i - 1], unpadded_intervals[i])
+            interval_union_space.remove(
+                unpadded_intervals[i - 1], unpadded_intervals[i]
+            )
     return interval_union_space
 
 
 @unflatten.register(BucketSpaceActionSpace)
-def _unflatten_bucket_space_action_space(space: BucketSpaceActionSpace, x: FlatType) -> BucketSpaceRestriction:
-    return BucketSpaceRestriction(space.base_space, space.bucket_width, space.epsilon,
-                                  x[3:])
+def _unflatten_bucket_space_action_space(
+    space: BucketSpaceActionSpace, x: FlatType
+) -> BucketSpaceRestriction:
+    return BucketSpaceRestriction(
+        space.base_space, space.bucket_width, space.epsilon, x[3:]
+    )

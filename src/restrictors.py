@@ -17,7 +17,8 @@ from src.restrictions import (
     Restriction,
     IntervalUnionRestriction,
     DiscreteVectorRestriction,
-    DiscreteSetRestriction, BucketSpaceRestriction,
+    DiscreteSetRestriction,
+    BucketSpaceRestriction,
 )
 
 
@@ -68,7 +69,9 @@ class DiscreteSetActionSpace(RestrictorActionSpace):
 
         discrete_set = DiscreteSetRestriction(
             self.base_space,
-            allowed_actions=set(np.where(np.random.choice([True, False], self.base_space.n) is True)),
+            allowed_actions=set(
+                np.where(np.random.choice([True, False], self.base_space.n) is True)
+            ),
         )
 
         return discrete_set
@@ -119,14 +122,15 @@ class IntervalUnionActionSpace(RestrictorActionSpace):
 
 
 class BucketSpaceActionSpace(RestrictorActionSpace):
-
     def __init__(self, base_space: Box, bucket_width=1.0, epsilon=0.01):
         super().__init__(base_space)
         assert isinstance(self.base_space, Box)
         self.bucket_width = bucket_width
         self.epsilon = epsilon
         self.number_of_buckets = math.ceil(
-            (self.base_space.high.item() - self.base_space.low.item()) / self.bucket_width)
+            (self.base_space.high.item() - self.base_space.low.item())
+            / self.bucket_width
+        )
 
     @property
     def is_np_flattenable(self) -> bool:
@@ -135,8 +139,12 @@ class BucketSpaceActionSpace(RestrictorActionSpace):
     def sample(self, mask: Any | None = None) -> BucketSpaceRestriction:
         assert isinstance(self.base_space, Box)
 
-        return BucketSpaceRestriction(self.base_space, self.bucket_width, self.epsilon,
-                                      available_buckets=np.random.choice([True, False], self.number_of_buckets))
+        return BucketSpaceRestriction(
+            self.base_space,
+            self.bucket_width,
+            self.epsilon,
+            available_buckets=np.random.choice([True, False], self.number_of_buckets),
+        )
 
 
 class PredicateActionSpace(RestrictorActionSpace):
