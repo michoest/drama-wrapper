@@ -1,4 +1,4 @@
-from drama.restrictions import (
+from .restrictions import (
     Restriction,
     DiscreteRestriction,
     ContinuousRestriction,
@@ -9,7 +9,7 @@ from drama.restrictions import (
     PredicateRestriction,
 )
 
-from drama.restrictors import (
+from .restrictors import (
     RestrictorActionSpace,
     Restrictor,
     DiscreteSetActionSpace,
@@ -19,12 +19,36 @@ from drama.restrictors import (
     PredicateActionSpace,
 )
 
-from drama.wrapper import RestrictionWrapper
+from .wrapper import RestrictionWrapper
 
-from drama.utils import (
+from .utils import (
     IntervalsOutOfBoundException,
     RestrictionViolationException,
     flatten,
     flatdim,
     unflatten,
 )
+
+__all__ = [
+    "Restriction",
+    "DiscreteRestriction",
+    "ContinuousRestriction",
+    "DiscreteSetRestriction",
+    "DiscreteVectorRestriction",
+    "IntervalUnionRestriction",
+    "BucketSpaceRestriction",
+    "PredicateRestriction",
+    "RestrictorActionSpace",
+    "Restrictor",
+    "DiscreteSetActionSpace",
+    "DiscreteVectorActionSpace",
+    "IntervalUnionActionSpace",
+    "BucketSpaceActionSpace",
+    "PredicateActionSpace",
+    "RestrictionWrapper",
+    "IntervalsOutOfBoundException",
+    "RestrictionViolationException",
+    "flatten",
+    "flatdim",
+    "unflatten"
+]

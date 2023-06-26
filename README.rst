@@ -31,9 +31,11 @@ In analogy to the AEC of *PettingZoo*
        action = env.action_space(agent).sample() # this is where you would insert your policy
        env.step(action)
 
-the *DRAMA* loop can be used as follows:
+the *DRAMA* loop can be imported and used as follows:
 
 ::
+   from drama.restrictors import Restrictor
+   from drama.wrapper import RestrictionWrapper
 
    env = ...
    restrictor = Restrictor(...)
