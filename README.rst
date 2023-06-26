@@ -1,7 +1,7 @@
 .. raw:: html
 
     <h1 align="center">DRAMA at the PettingZoo</h1>
-    <h2>Dynamically Restricted Action Spaces for<br>Multi-Agent Reinforcement Learning Frameworks<\h2>
+    <h2 align="center">Dynamically Restricted Action Spaces for<br>Multi-Agent Reinforcement Learning Frameworks</h2>
 
 This repository contains the reference implementation of the *DRAMA*
 framework as introduced in *Oesterle et al. (2024): DRAMA at the
