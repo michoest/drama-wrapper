@@ -70,12 +70,8 @@ def _default_restriction_violation_fn(env, action, restriction: Restriction):
 class RestrictionWrapper(BaseWrapper):
     """Wrapper that implements the agent-restrictor-environment loop of DRAMA:
 
-        Reset() -> Restrictor of Agent_0
-        Step() -> Agent_0
-        Step() -> Restrictor of Agent_1
-        Step() -> Agent_1
-        Step() -> Restrictor of Agent_2
-        ...
+        Reset() -> Restrictor of Agent_0 -> Step() -> Agent_0 -> Step()
+        -> Restrictor of Agent_1 -> Step() -> Agent_1 -> ...
     """
 
     def __init__(
