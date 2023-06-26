@@ -12,7 +12,11 @@ Reinforcement Learning Frameworks. Submitted to HICSS 2024.*
 Installation
 ------------
 
-TODO Tim
+To install the DRAMA library:
+
+.. code-block::
+
+    $  pip install drama-wrapper
 
 Usage
 -----
