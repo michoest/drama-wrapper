@@ -53,8 +53,7 @@ Please refer to ``getting-started.ipynb`` for a first full example.
 Documentation
 -------------
 
-The full documentation of the code can be found at
-https://drama-wrapper.readthedocs.io/.
+The full documentation of the code can be found `here <https://drama-wrapper.readthedocs.io/>`__.
 
 Citation
 --------
