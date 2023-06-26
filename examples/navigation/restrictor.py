@@ -5,8 +5,8 @@ from gymnasium.spaces import Box, Dict
 from shapely import Polygon, Point, LineString
 
 from examples.navigation.env import NavigationEnvironment, Agent
-from src.restrictions import IntervalUnionRestriction
-from src.restrictors import Restrictor, IntervalUnionActionSpace
+from drama.restrictions import IntervalUnionRestriction
+from drama.restrictors import Restrictor, IntervalUnionActionSpace
 
 MULTI_GEOM_TYPES = ['MultiPolygon', 'MultiLineString', 'GeometryCollection', 'MultiPoint']
 NO_EXTERIOR_TYPES = ['Point', 'LineString']

@@ -90,6 +90,12 @@ class DiscreteSetRestriction(DiscreteRestriction):
     def contains(self, x: int) -> bool:
         return x in self.allowed_actions
 
+    def add(self, x: int) -> None:
+        self.allowed_actions.add(x)
+
+    def remove(self, x: int) -> None:
+        self.allowed_actions.remove(x)
+
     def __eq__(self, __value: object) -> bool:
         return (
             isinstance(__value, DiscreteSetRestriction)
@@ -321,7 +327,7 @@ class IntervalUnionRestriction(ContinuousRestriction):
                 else ((None, None), False)
             )
         else:
-            if root.r is not None:
+            if root.right is not None:
                 interval, flag = self.last_interval_before_or_within(x, root.right)
                 if interval[0] is None:
                     interval, flag = (root.x, root.y), False
@@ -434,7 +440,7 @@ class IntervalUnionRestriction(ContinuousRestriction):
                 root.y = root.right.y
                 updated = True
 
-            if root.l is not None and root.x <= root.left.y:
+            if root.left is not None and root.x <= root.left.y:
                 self.size -= root.left.x - root.x
                 root.x = root.left.x
                 updated = True

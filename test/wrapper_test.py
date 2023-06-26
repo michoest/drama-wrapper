@@ -14,8 +14,8 @@ from pettingzoo.classic import rps_v2
 from gymnasium.spaces import Discrete
 
 # Internal modules
-from src.wrapper import RestrictionWrapper
-from src.restrictors import Restrictor, DiscreteSetActionSpace
+from drama.wrapper import RestrictionWrapper
+from drama.restrictors import Restrictor, DiscreteSetActionSpace
 
 # from src.restrictions import
 

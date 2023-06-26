@@ -10,9 +10,9 @@ from pettingzoo import AECEnv
 from pettingzoo.utils import BaseWrapper
 
 # Internal modules
-from src.restrictions import Restriction
-from src.restrictors import Restrictor
-from src.utils import flatten, RestrictionViolationException
+from drama.restrictions import Restriction
+from drama.restrictors import Restrictor
+from drama.utils import flatten
 
 
 # If no functions are provided for some or all restrictors, use these defaults
@@ -29,7 +29,7 @@ def _default_postprocess_restriction_fn(restriction):
 
 
 def _default_restriction_violation_fn(env, action, restriction: Restriction):
-    raise RestrictionViolationException()
+    env.step(restriction.sample())
 
 
 class RestrictionWrapper(BaseWrapper):

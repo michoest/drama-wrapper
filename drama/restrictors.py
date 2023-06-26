@@ -13,7 +13,7 @@ from gymnasium.spaces import Box, Discrete
 from pettingzoo import AECEnv
 
 # Internal modules
-from src.restrictions import (
+from drama.restrictions import (
     Restriction,
     IntervalUnionRestriction,
     DiscreteVectorRestriction,
@@ -70,7 +70,9 @@ class DiscreteSetActionSpace(RestrictorActionSpace):
         discrete_set = DiscreteSetRestriction(
             self.base_space,
             allowed_actions=set(
-                np.where(np.random.choice([True, False], self.base_space.n) is True)
+                np.arange(
+                    self.base_space.start, self.base_space.start + self.base_space.n
+                )[np.random.choice([True, False], size=self.base_space.n)]
             ),
         )
 

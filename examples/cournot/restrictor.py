@@ -4,8 +4,8 @@ import numpy as np
 from gymnasium.spaces import Box
 from pettingzoo import AECEnv
 
-from src.restrictors import Restrictor, RestrictorActionSpace
-from src.restrictions import IntervalUnionRestriction
+from drama.restrictors import Restrictor, RestrictorActionSpace
+from drama.restrictions import IntervalUnionRestriction
 
 
 class CournotRestrictor(Restrictor):

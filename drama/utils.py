@@ -14,14 +14,14 @@ from gymnasium.spaces import Dict
 from gymnasium.spaces.utils import FlatType, T
 
 # Internal modules
-from src.restrictions import (
+from drama.restrictions import (
     DiscreteSetRestriction,
     DiscreteVectorRestriction,
     IntervalUnionRestriction,
     BucketSpaceRestriction,
     Restriction,
 )
-from src.restrictors import (
+from drama.restrictors import (
     DiscreteSetActionSpace,
     DiscreteVectorActionSpace,
     IntervalUnionActionSpace,

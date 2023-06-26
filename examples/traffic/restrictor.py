@@ -8,9 +8,9 @@ import torch.optim as optim
 
 import gymnasium as gym
 from gymnasium.spaces import Space, Discrete, Box
-from src.restrictors import Restrictor, RestrictorActionSpace, DiscreteVectorActionSpace
-from src.restrictions import DiscreteVectorRestriction
-from src.utils import flatdim
+from drama.restrictors import Restrictor, RestrictorActionSpace, DiscreteVectorActionSpace
+from drama.restrictions import DiscreteVectorRestriction
+from drama.utils import flatdim
 
 from examples.utils import ReplayBuffer
 

@@ -6,7 +6,7 @@ from unittest import TestCase
 from gymnasium.spaces import Box
 
 # Internal modules
-from src.restrictions import (
+from drama.restrictions import (
     DiscreteSetRestriction,
     DiscreteVectorRestriction,
     Node,

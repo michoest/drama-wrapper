@@ -9,14 +9,14 @@ from gymnasium.spaces import Discrete
 import numpy as np
 
 # Internal modules
-from src.utils import flatdim, flatten, unflatten
-from src.restrictors import (
+from drama.utils import flatdim, flatten, unflatten
+from drama.restrictors import (
     DiscreteSetActionSpace,
     DiscreteVectorActionSpace,
     IntervalUnionActionSpace,
     BucketSpaceActionSpace,
 )
-from src.restrictions import DiscreteSetRestriction, DiscreteVectorRestriction
+from drama.restrictions import DiscreteSetRestriction, DiscreteVectorRestriction
 
 
 class DiscreteSetActionSpaceTest(unittest.TestCase):

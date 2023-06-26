@@ -5,7 +5,7 @@
 from unittest import TestCase
 
 # Internal modules
-from src.restrictors import (
+from drama.restrictors import (
     RestrictorActionSpace,
     Restrictor,
     DiscreteSetActionSpace,

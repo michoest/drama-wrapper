@@ -4,7 +4,8 @@ from matplotlib import pyplot as plt
 
 from examples.navigation.env import NavigationEnvironment
 from examples.navigation.restrictor import NavigationRestrictor
-from src.wrapper import RestrictionWrapper
+from drama.restrictions import IntervalUnionRestriction
+from drama.wrapper import RestrictionWrapper
 
 
 def do_nothing_on_invalid_violation_fn(env, action, restriction):

@@ -1,4 +1,4 @@
-from restrictions import (
+from drama.restrictions import (
     Restriction,
     DiscreteRestriction,
     ContinuousRestriction,
@@ -9,7 +9,7 @@ from restrictions import (
     PredicateRestriction,
 )
 
-from restrictors import (
+from drama.restrictors import (
     RestrictorActionSpace,
     Restrictor,
     DiscreteSetActionSpace,
@@ -19,9 +19,9 @@ from restrictors import (
     PredicateActionSpace,
 )
 
-from wrapper import RestrictionWrapper
+from drama.wrapper import RestrictionWrapper
 
-from utils import (
+from drama.utils import (
     IntervalsOutOfBoundException,
     RestrictionViolationException,
     flatten,
