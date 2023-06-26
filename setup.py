@@ -13,7 +13,7 @@ https://drama-wrapper.readthedocs.io/en/master/
 """
 
 setup(
-    name='drama',
+    name='drama-wrapper',
     packages=['drama'],
     version='v0.1',
     license='MIT',
