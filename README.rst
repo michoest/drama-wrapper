@@ -34,6 +34,7 @@ In analogy to the AEC of *PettingZoo*
 the *DRAMA* loop can be imported and used as follows:
 
 ::
+
    from drama.restrictors import Restrictor
    from drama.wrapper import RestrictionWrapper
 
