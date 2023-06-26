@@ -14,7 +14,8 @@ https://drama-wrapper.readthedocs.io/en/master/
 
 setup(
     name='drama-wrapper',
-    packages=['drama'],
+    packages=['drama-wrapper'],
+    package_dir={'drama-wrapper': 'drama'},
     version='v0.1',
     license='MIT',
     description=description,
