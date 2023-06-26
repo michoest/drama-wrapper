@@ -16,7 +16,7 @@ setup(
     name='drama-wrapper',
     packages=['drama-wrapper'],
     package_dir={'drama-wrapper': 'drama'},
-    version='v0.1',
+    version='v1.0.0',
     license='MIT',
     description=description,
     author='Michael Oesterle, Tim Grams',
