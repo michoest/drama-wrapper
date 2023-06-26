@@ -1,6 +1,6 @@
 .. raw:: html
 
-    <h2 align="center">DRAMA at the PettingZoo<br>Dynamically Restricted Action Spaces for Multi-Agent Reinforcement Learning Frameworks</h2>
+    <h2 align="center">DRAMA at the PettingZoo:<br>Dynamically Restricted Action Spaces for Multi-Agent Reinforcement Learning Frameworks</h2>
 
 .. toctree::
    :hidden:
@@ -8,3 +8,6 @@
    :caption: API
 
    api/wrapper
+   api/restrictors
+   api/restrictions
+   api/utils
