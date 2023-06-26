@@ -1,6 +1,6 @@
 .. raw:: html
 
-    <h1 align="center">DRAMA at the PettingZoo:<br>Dynamically Restricted Action Spaces for Multi-Agent Reinforcement Learning Frameworks</h1>
+    <h1 align="center">DRAMA at the PettingZoo:<br>Dynamically Restricted Action Spaces for<br>Multi-Agent Reinforcement Learning Frameworks</h1>
 
 Purpose of this repository
 --------------------------
