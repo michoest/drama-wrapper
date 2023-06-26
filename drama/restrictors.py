@@ -1,6 +1,6 @@
 # Typing
 import math
-from typing import Any, Union
+from typing import Any
 
 # Standard modules
 from abc import ABC
@@ -8,7 +8,6 @@ from abc import ABC
 # External modules
 import gymnasium as gym
 import numpy as np
-import torch
 from gymnasium.spaces import Box, Discrete
 from pettingzoo import AECEnv
 
@@ -47,9 +46,7 @@ class Restrictor(ABC):
         self.observation_space = observation_space
         self.action_space = action_space
 
-    def preprocess_observation(
-        self, env: AECEnv
-    ) -> Union[np.ndarray, torch.TensorType]:
+    def preprocess_observation(self, env: AECEnv) -> Any:
         return env.state()
 
     def act(self, observation: gym.Space) -> RestrictorActionSpace:
