@@ -15,7 +15,7 @@ https://drama-wrapper.readthedocs.io/en/master/
 setup(
     name='drama',
     packages=['drama'],
-    version='0.1',
+    version='v0.1',
     license='MIT',
     description=description,
     author='Michael Oesterle, Tim Grams',
