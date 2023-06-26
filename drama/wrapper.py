@@ -12,7 +12,7 @@ from pettingzoo.utils import BaseWrapper
 # Internal modules
 from drama.restrictions import Restriction
 from drama.restrictors import Restrictor
-from drama.utils import flatten
+from drama.utils import flatten, RestrictionViolationException
 
 
 # If no functions are provided for some or all restrictors, use these defaults
@@ -61,10 +61,10 @@ def _default_restriction_violation_fn(env, action, restriction: Restriction):
         action: The action which violated the restriction
         restriction: The restriction object corresponding to the action
 
-    Returns:
+    Raises:
         The restrictor observation
     """
-    env.step(restriction.sample())
+    raise RestrictionViolationException()
 
 
 class RestrictionWrapper(BaseWrapper):
