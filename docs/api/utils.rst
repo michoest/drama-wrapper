@@ -14,13 +14,7 @@ Utils
 .. automethod:: drama.utils.projection_violation_fn
 
 .. automethod:: drama.utils.flatten
-    :members:
-    :undoc-members:
 
 .. automethod:: drama.utils.flatdim
-    :members:
-    :undoc-members:
 
 .. automethod:: drama.utils.unflatten
-    :members:
-    :undoc-members:
