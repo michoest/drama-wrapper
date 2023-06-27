@@ -62,7 +62,7 @@ def _default_restriction_violation_fn(env, action, restriction: Restriction):
         restriction: The restriction object corresponding to the action
 
     Raises:
-        RestrictionViolationException
+        RestrictionViolationException: If the restriction is violated
     """
     raise RestrictionViolationException()
 

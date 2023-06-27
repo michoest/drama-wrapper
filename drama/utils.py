@@ -30,26 +30,58 @@ from drama.restrictors import (
 
 
 class IntervalsOutOfBoundException(Exception):
+    """Thrown when the number of intervals exceeds the specified maximum representation length"""
     def __init__(self, *args) -> None:
         super().__init__(*args)
 
 
 class RestrictionViolationException(Exception):
+    """Thrown when a restriction is violated"""
     def __init__(self, *args) -> None:
         super().__init__(*args)
 
 
 def random_replacement_violation_fn(env, action, restriction: Restriction):
+    """Random replacement of restriction violations.
+
+    Args:
+        env: The environment after the agent step was taken
+        action: The action which violated the restriction
+        restriction: The restriction object corresponding to the action
+
+    Returns:
+        Randomly sampled action from the allowed action space
+    """
     env.step(restriction.sample())
 
 
 def projection_violation_fn(env, action, restriction: IntervalUnionRestriction):
+    """Euclidean projection of restriction violations.
+
+    Args:
+        env: The environment after the agent step was taken
+        action: The action which violated the restriction
+        restriction: The restriction object corresponding to the action
+
+    Returns:
+        Closest allowed action minimizing the euclidean distance
+    """
     env.step(np.array([restriction.nearest_element(action.item())], dtype=np.float32))
 
 
 # flatten functions for restriction classes
 @singledispatch
 def flatten(space: Space, x: T, **kwargs) -> FlatType:
+    """Flatten a data point from a space.
+
+    Args:
+        space: The space that ``x`` is flattened by
+        x: The value to flatten
+        **kwargs: Additional flattening parameters passed to subsequent flatten operations
+
+    Returns:
+         The flattened datapoint
+    """
     return gymnasium.spaces.utils.flatten(space, x)
 
 
@@ -124,6 +156,18 @@ def _flatten_bucket_space_action_space(
 # flatdim functions for restriction classes
 @singledispatch
 def flatdim(space: Space[Any]) -> int:
+    """Return the number of dimensions a flattened equivalent of this space would have.
+
+    Args:
+        space: The space to return the number of dimensions of the flattened spaces
+
+    Returns:
+        The number of dimensions for the flattened spaces
+
+    Raises:
+         NotImplementedError: if the space is not defined in :mod:`gym.spaces`.
+         ValueError: if the space cannot be flattened into a :class:`gymnasium.spaces.Box`
+    """
     return gymnasium.spaces.utils.flatdim(space)
 
 
@@ -154,6 +198,18 @@ def _flatdim_bucket_space_action_space(space: BucketSpaceActionSpace) -> int:
 # unflatten functions for restriction classes
 @singledispatch
 def unflatten(space: Space[T], x: FlatType) -> T:
+    """Unflatten a data point from a space.
+
+    Args:
+        space: The space used to unflatten ``x``
+        x: The array to unflatten
+
+    Returns:
+        A point with a structure that matches the space.
+
+    Raises:
+        NotImplementedError: if the space is not defined in :mod:`gymnasium.spaces`.
+    """
     return gymnasium.spaces.utils.unflatten(space, x)
 
 
