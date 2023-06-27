@@ -14,57 +14,64 @@ from gymnasium.spaces import Box
 
 
 class Restriction(ABC, gym.Space):
-    """Base class for restrictions. All restrictions are valid `gym.Space`s."""
-
+    """Base class for restrictions. All restrictions are valid :class:`gymnasium.spaces.Space`'s."""
     def __init__(
         self,
         base_space: gym.Space,
         *,
         seed: int | np.random.Generator | None = None,
     ):
-        """Initializes a restriction with the base space of which the restriction
-        represents a subset.
+        """Constructor of :class:`Restriction`.
 
         Args:
-            base_space (gym.Space): Space whose subsets can be represented by the
-            restriction.
-            seed (int | np.random.Generator | None, optional): Random seed for
-            sampling. Defaults to None.
+            base_space: :class:`gymnasium.spaces.Space` whose subsets can be represented by the restriction.
+            seed: Random seed for sampling. Defaults to None.
         """
         super().__init__(base_space.shape, base_space.dtype, seed)
         self.base_space = base_space
 
     def __repr__(self) -> str:
+        """Representation of the Restriction."""
         return f"{self.__class__.__name__}"
 
 
 class DiscreteRestriction(Restriction, ABC):
-    """Represents a restriction of a `Discrete` space."""
-
+    """Representation of a :class:`gymnasium.spaces.Discrete` restriction."""
     def __init__(
         self,
         base_space: gym.spaces.Discrete,
         *,
         seed: int | np.random.Generator | None = None,
     ):
+        """Constructor of :class:`DiscreteRestriction`.
+
+        Args:
+            base_space: :class:`gymnasium.spaces.Discrete` whose subsets can be represented by the
+            restriction.
+            seed: Random seed for sampling. Defaults to None.
+        """
         super().__init__(base_space, seed=seed)
 
 
 class ContinuousRestriction(Restriction, ABC):
-    """Represents a restriction of a `Box` space."""
-
+    """Representation of a :class:`gymnasium.spaces.Box` restriction."""
     def __init__(
         self,
         base_space: gym.spaces.Box,
         *,
         seed: int | np.random.Generator | None = None,
     ):
+        """Constructor of :class:`ContinuousRestriction`.
+
+        Args:
+            base_space: :class:`gymnasium.spaces.Box` whose subsets can be represented by the restriction.
+            seed: Random seed for sampling. Defaults to None.
+        """
         super().__init__(base_space, seed=seed)
 
 
 class DiscreteSetRestriction(DiscreteRestriction):
-    """Represents a restriction of a `Discrete` space as a set of allowed actions."""
-
+    """Representation of a :class:`gymnasium.spaces.Discrete` restriction  as a set of allowed actions."""
     def __init__(
         self,
         base_space: gym.spaces.Discrete,
@@ -72,6 +79,13 @@ class DiscreteSetRestriction(DiscreteRestriction):
         allowed_actions: Optional[Set[int]] = None,
         seed: int | np.random.Generator | None = None,
     ):
+        """Constructor of :class:`DiscreteSetRestriction`.
+
+        Args:
+            base_space: :class:`gymnasium.spaces.Discrete` whose subsets can be represented by the restriction
+            allowed_actions: Optional, initial set of allowed actions
+            seed: Random seed for sampling. Defaults to None
+        """
         super().__init__(base_space, seed=seed)
 
         self.allowed_actions = (
@@ -82,21 +96,53 @@ class DiscreteSetRestriction(DiscreteRestriction):
 
     @property
     def is_np_flattenable(self) -> bool:
+        """Checks whether this space can be flattened to a :class:`gymnasium.spaces.Box`.
+
+        Returns:
+            `True`
+        """
         return True
 
     def sample(self, mask: Any | None = None) -> int:
+        """Randomly sample an action from the allowed set.
+
+        Args:
+            mask: The mask used for sampling (currently no effect)
+
+        Returns:
+            Valid discrete action
+        """
         return random.choice(tuple(self.allowed_actions))
 
     def contains(self, x: int) -> bool:
+        """Check if a discrete action is allowed.
+
+        Args:
+            x: The discrete action
+
+        Returns:
+            `True` if the action is allowed. `False` otherwise
+        """
         return x in self.allowed_actions
 
     def add(self, x: int) -> None:
+        """Adds a discrete action to the set of allowed actions.
+
+        Args:
+            x: The discrete action
+        """
         self.allowed_actions.add(x)
 
     def remove(self, x: int) -> None:
+        """Removes a discrete action from the set of allowed actions.
+
+        Args:
+            x: The discrete action
+        """
         self.allowed_actions.remove(x)
 
     def __eq__(self, __value: object) -> bool:
+        """Check if two instances of :class:`DiscreteSetRestriction` are equal."""
         return (
             isinstance(__value, DiscreteSetRestriction)
             and self.base_space == __value.base_space
@@ -104,14 +150,14 @@ class DiscreteSetRestriction(DiscreteRestriction):
         )
 
     def __repr__(self) -> str:
+        """Representation of the :class:`DiscreteSetRestriction`."""
         return f"{self.__class__.__name__}({self.allowed_actions})"
 
 
 class DiscreteVectorRestriction(DiscreteRestriction):
-    """Represents a restriction of a `Discrete` space as a boolean vector of allowed
+    """Representation of a :class:`gymnasium.spaces.Discrete` restriction as a boolean vector of allowed
     and forbidden actions.
     """
-
     def __init__(
         self,
         base_space: gym.spaces.Discrete,
@@ -119,6 +165,13 @@ class DiscreteVectorRestriction(DiscreteRestriction):
         allowed_actions: Optional[np.ndarray[bool]] = None,
         seed: int | np.random.Generator | None = None,
     ):
+        """Constructor of :class:`DiscreteVectorRestriction`.
+
+        Args:
+            base_space: :class:`gymnasium.spaces.Discrete` whose subsets can be represented by the restriction
+            allowed_actions: Optional, initial binary vector indicating allowed actions
+            seed: Random seed for sampling. Defaults to None
+        """
         super().__init__(base_space, seed=seed)
 
         self.allowed_actions = (
@@ -129,23 +182,46 @@ class DiscreteVectorRestriction(DiscreteRestriction):
 
     @property
     def is_np_flattenable(self) -> bool:
+        """Checks whether this space can be flattened to a :class:`gymnasium.spaces.Box`.
+
+        Returns:
+            `True`
+        """
         return True
 
     def sample(self, mask: Any | None = None) -> int:
+        """Randomly sample an action from the allowed set.
+
+        Args:
+            mask: The mask used for sampling (currently no effect)
+
+        Returns:
+            Valid discrete action
+        """
         return self.base_space.start + random.choice(
             tuple(index for index, value in enumerate(self.allowed_actions) if value)
         )
 
     def contains(self, x: int) -> bool:
+        """Check if a discrete action is allowed.
+
+        Args:
+            x: The discrete action
+
+        Returns:
+            `True` if the action is allowed. `False` otherwise
+        """
         return self.allowed_actions[x - self.base_space.start]
 
     def __repr__(self) -> str:
+        """Representation of the :class:`DiscreteVectorRestriction`."""
         return f"{self.__class__.__name__}({self.allowed_actions})"
 
 
 class Node(object):
-    """Node in the AVL tree, representing a valid interval."""
-
+    """Node in the AVL tree of intervals.
+    A single instance of :class:`Node` represents an allowed interval.
+    """
     def __init__(
         self,
         x: float = None,
@@ -154,12 +230,13 @@ class Node(object):
         right: object = None,
         height: int = 1,
     ):
-        """
+        """Constructor of :class:`Node`.
+
         Args:
-            x (float): Lower bound of the interval
-            y (float): Upper bound of the interval
-            left (Node): Left, smaller interval
-            right (Node): Right, larger interval
+            x: Lower bound of the interval
+            y: Upper bound of the interval
+            left: Left, smaller interval
+            right: Right, larger interval
         """
         self.x: Decimal = Decimal(f"{x}") if x is not None else None
         self.y: Decimal = Decimal(f"{y}") if y is not None else None
@@ -168,45 +245,63 @@ class Node(object):
         self.height = height
 
     def __str__(self):
+        """String representation of the :class:`Node`."""
         return f"<Node ({self.x},{self.y}), height: {self.height}, left: {self.left}, \
         right: {self.right}>"
 
     def __repr__(self):
+        """Representation of the :class:`Node`."""
         return self.__str__()
 
 
 class IntervalUnionRestriction(ContinuousRestriction):
-    """Represents a restriction of a one-dimensional `Box` space as an AVL tree of
+    """Representation of a one-dimensional :class:`gymnasium.spaces.Box` restriction as an AVL tree of
     allowed intervals."""
-
-    @property
-    def is_np_flattenable(self) -> bool:
-        return True
-
     root_tree = None
     size: Decimal = 0
     draw = None
 
     def __init__(self, base_space: Box):
+        """Constructor of :class:`IntervalUnionRestriction`.
+
+        Args:
+            base_space: :class:`gymnasium.spaces.Box` whose subsets can be represented by the restriction
+        """
         super().__init__(base_space)
         getcontext().prec = 28
 
         self.root_tree = Node(base_space.low[0], base_space.high[0])
         self.size = Decimal(f"{base_space.high[0]}") - Decimal(f"{base_space.low[0]}")
 
+    @property
+    def is_np_flattenable(self) -> bool:
+        """Checks whether this space can be flattened to a :class:`gymnasium.spaces.Box`.
+
+        Returns:
+            `True`
+        """
+        return True
+
     def __contains__(self, item):
+        """Check if a continuous action is allowed.
+
+        Args:
+            item: The continuous action
+
+        Returns:
+            `True` if the action is allowed. `False` otherwise
+        """
         return self.contains(item)
 
     def contains(self, x: Union[np.array, float], root: object = "root"):
-        """Determines if a number is part of the action space
+        """Check if a continuous action is allowed.
 
         Args:
-            x: Number
-            root: Node to start the search from or 'root' for searching the whole tree,
-            default is 'root'
+            x: The continuous action
+            root: :class:`Node` to start the search from or 'root' for searching the whole tree, default is 'root'
 
         Returns:
-            Boolean indicating if it is part of the action space
+            `True` if the action is allowed. `False` otherwise
         """
         if root == "root":
             root = self.root_tree
@@ -226,16 +321,14 @@ class IntervalUnionRestriction(ContinuousRestriction):
             return self.contains(x, root.right)
 
     def nearest_elements(self, x, root: Node = "root"):
-        """Finds nearest actions for a number in the action space
+        """Finds the closest allowed actions for a continuous action.
 
         Args:
-            x: Number
-            root: Node to start the search from or 'root' for searching the whole tree,
-            default is 'root'
+            x: The continuous action
+            root: :class:`Node` to start the search from or 'root' for searching the whole tree, default is 'root'
 
         Returns:
-            Nearest elements in the action space. It is the number itself if it is
-            valid.
+            Nearest elements in the action space. Returns x if it is valid.
         """
         if root == "root":
             root = self.root_tree
@@ -250,6 +343,17 @@ class IntervalUnionRestriction(ContinuousRestriction):
             return [x]
 
     def _nearest_elements(self, x, min_diff, min_value, root: Node = "root"):
+        """Helper function to find the closest allowed actions for a continuous action.
+
+        Args:
+            x: The continuous action
+            min_diff: Minimum distance of an allowed action to x that has been found so far
+            min_value: Allowed action with the minimum distance to x that has been found so far
+            root: :class:`Node` to start the search from or 'root' for searching the whole tree, default is 'root'
+
+        Returns:
+            Nearest elements in the allowed action space. Returns x if it is valid.
+        """
         if root == "root":
             root = self.root_tree
 
@@ -281,16 +385,14 @@ class IntervalUnionRestriction(ContinuousRestriction):
             return [x]
 
     def nearest_element(self, x, root: Node = "root"):
-        """Finds the nearest action for a number in the action space. Larger actions
-        preferred.
+        """Finds the minimum closest allowed action for a continuous action.
 
         Args:
-            x: Number
-            root: Node to start the search from or 'root' for searching the whole tree,
-            default is 'root'
+            x: The continuous action
+            root: :class:`Node` to start the search from or 'root' for searching the whole tree, default is 'root'
 
         Returns:
-            Nearest element in the action space. It is the number itself if it is valid.
+            Nearest element in the allowed action space. Returns x if it is valid.
         """
         if root == "root":
             root = self.root_tree
@@ -300,18 +402,17 @@ class IntervalUnionRestriction(ContinuousRestriction):
         return self.nearest_elements(x, root)[-1]
 
     def last_interval_before_or_within(self, x, root: Node = "root"):
-        """Returns the last interval before or within a number
+        """The last interval before or within a continuous action
 
         Args:
-            x: Number
-            root: Node to start the search from or 'root' for searching the whole tree,
-            default is 'root'
+            x: The continuous action
+            root: :class:`Node` to start the search from or 'root' for searching the whole tree, default is 'root'
 
         Returns:
             Tuple containing the lower and upper boundaries of the interval and a
-            variable indicating if the number lies in the interval. For example:
+            variable indicating if the number lies in the interval.
 
-            (root.x, root.y), True
+            For example: (root.x, root.y), True
         """
         if root == "root":
             root = self.root_tree
@@ -341,19 +442,17 @@ class IntervalUnionRestriction(ContinuousRestriction):
             )
 
     def first_interval_after_or_within(self, x, root: Node = "root"):
-        """Returns the first interval after or within a number
+        """The last interval after or within a continuous action
 
         Args:
-            x: Number
-            root: Node to start the search from or 'root' for searching the whole tree,
-            default is 'root'
+            x: The continuous action
+            root: :class:`Node` to start the search from or 'root' for searching the whole tree, default is 'root'
 
         Returns:
             Tuple containing the lower and upper boundaries of the interval and a
-            variable indicating
-            if the number lies in the interval. For example:
+            variable indicating if the number lies in the interval.
 
-            (root.x, root.y), True
+            For example: (root.x, root.y), True
         """
         if root == "root":
             root = self.root_tree
@@ -381,14 +480,13 @@ class IntervalUnionRestriction(ContinuousRestriction):
             )
 
     def smallest_interval(self, root: Node = "root"):
-        """Returns the Node of the smallest interval
+        """Return the Node of the smallest interval
 
         Args:
-            root: Node to start the search from or 'root' for searching the whole tree,
-            default is 'root'
+            root: :class:`Node` to start the search from or 'root' for searching the whole tree, default is 'root'
 
         Returns:
-            Node of the smallest interval
+            :class:`Node` of the smallest interval
         """
         if root == "root":
             root = self.root_tree
@@ -399,16 +497,15 @@ class IntervalUnionRestriction(ContinuousRestriction):
             return self.smallest_interval(root.left)
 
     def add(self, x, y, root: Node = "root"):
-        """Adds an interval to the action space
+        """Add an interval to the action space
 
         Args:
             x: Lower bound of the interval
             y: Upper bound of the interval
-            root: Node to start the insertion from or 'root' for inserting over the
-            whole tree, default is 'root'
+            root: :class:`Node` to start the insertion from or 'root' for inserting over the whole tree, default is 'root'
 
         Returns:
-            Updated root node of the action space
+            Updated root :class:`Node` of the action space
         """
         assert y > x, "Upper must be larger than lower bound"
 
@@ -476,13 +573,13 @@ class IntervalUnionRestriction(ContinuousRestriction):
         return root
 
     def sample(self, root: Node = "root") -> np.ndarray:
-        """Sample a random action from a uniform distribution over the action space
+        """Randomly sample a continuous action from a uniform distribution over the allowed action space
 
         Args:
-            root: Root node of the action space, default is 'root'
+            root: :class:`Node` node of the action space, default is 'root'
 
         Returns:
-            Sampled action as a float
+            Sampled continuous action
         """
         if root == "root":
             root = self.root_tree
@@ -513,11 +610,11 @@ class IntervalUnionRestriction(ContinuousRestriction):
         Args:
             x: Lower bound of the interval
             y: Upper bound of the interval
-            root: Node to start the removal from or 'root' for removing over the whole
-            tree, default is 'root'
+            root: :class:`Node` to start the removal from or 'root' for removing over the whole tree, default is 'root'
+            adjust_size: Whether the size attribute of the tree should be modified
 
         Returns:
-            Updated root node of the action space
+            Updated root :class:`Node` of the action space
         """
         assert y > x, "Upper must be larger than lower bound"
 
@@ -600,10 +697,10 @@ class IntervalUnionRestriction(ContinuousRestriction):
         """Performs a left rotation. Switches roles of parent and child nodes.
 
         Args:
-            z (Node): Parent node for the rotation
+            z: Parent :class:`Node` for the rotation
 
         Returns:
-            Updated parent Node
+            Updated parent :class:`Node`
         """
         y = z.right
         T2 = y.left
@@ -620,10 +717,10 @@ class IntervalUnionRestriction(ContinuousRestriction):
         """Performs a right rotation. Switches roles of parent and child nodes.
 
         Args:
-            z (Node): Parent node for the rotation
+            z: Parent :class:`Node` for the rotation
 
         Returns:
-            Updated parent Node
+            Updated parent :class:`Node`
         """
         y = z.left
         T3 = y.right
@@ -640,11 +737,10 @@ class IntervalUnionRestriction(ContinuousRestriction):
         """Returns the height of a Node
 
         Args:
-            root: Node to return the height from or 'root' for the height of the whole
-            tree, default is 'root'
+            root: :class:`Node` to return the height from or 'root' for the height of the whole tree, default is 'root'
 
         Returns:
-            Integer indicating the height
+            The height of the node in the tree
         """
         if root == "root":
             root = self.root_tree
@@ -655,15 +751,14 @@ class IntervalUnionRestriction(ContinuousRestriction):
         return root.height
 
     def getBal(self, root: Node = "root"):
-        """Calculates balance factor
+        """Calculate the balance factor
 
         Args:
-            root: Node to calculate the balance factor for or 'root' for the balance
-            factor of the whole tree,
-            default is 'root'
+            root: :class:`Node` to calculate the balance factor for or 'root' for the balance factor of the whole tree,
+                default is 'root'
 
         Returns:
-            Integer indicating the balance factor
+            The balance factor
         """
         if root == "root":
             root = self.root_tree
@@ -674,19 +769,25 @@ class IntervalUnionRestriction(ContinuousRestriction):
         return self.getHeight(root.left) - self.getHeight(root.right)
 
     def intervals(self):
+        """Return all intervals of the allowed action space in an ordered way.
+
+        Returns:
+            List of tuples containing the ordered intervals.
+
+            For example: [(0.1,0.5), (0.7,0.9)]
+        """
         return self._intervals()
 
     def _intervals(self, root: Node = "root"):
-        """Returns all intervals of the action space ordered
+        """Return all allowed intervals starting from a specific node in an ordered way.
 
         Args:
-            root: Node to start the search from or 'root' for searching the whole tree,
-            default is 'root'
+            root: :class:`Node` to start the search from or 'root' for searching the whole tree, default is 'root'
 
         Returns:
-            List of tuples containing the ordered intervals. For example:
+            List of tuples containing the ordered intervals.
 
-            [(0.1,0.5), (0.7,0.9)]
+            For example: [(0.1,0.5), (0.7,0.9)]
         """
         if root == "root":
             root = self.root_tree
@@ -703,19 +804,17 @@ class IntervalUnionRestriction(ContinuousRestriction):
         return ordered
 
     def __str__(self):
+        """String representation of the :class:`IntervalUnionRestriction`."""
         return f"{self.__class__.__name__}({self.intervals()})"
 
     def __repr__(self):
+        """Representation of the :class:`IntervalUnionRestriction`."""
         return self.__str__()
 
 
 class BucketSpaceRestriction(ContinuousRestriction):
-    """Interval Action Space as predefined buckets."""
-
-    @property
-    def is_np_flattenable(self) -> bool:
-        return True
-
+    """Representation of a one-dimensional :class:`gymnasium.spaces.Box` restriction as a binary vector
+    indicating the availability of equally sized buckets."""
     def __init__(
         self,
         base_space: Box,
@@ -723,6 +822,14 @@ class BucketSpaceRestriction(ContinuousRestriction):
         epsilon=0.01,
         available_buckets: np.ndarray = None,
     ) -> None:
+        """Constructor of :class:`BucketSpaceRestriction`.
+
+        Args:
+            base_space: :class:`gymnasium.spaces.Box` whose subsets can be represented by the restriction
+            bucket_width: The width of each bucket
+            epsilon: The radius in which buckets are set valid/invalid around a specific point
+            available_buckets: The binary vector indicating the allowed subsets
+        """
         super().__init__(base_space)
         assert isinstance(self.base_space, Box)
 
@@ -745,25 +852,34 @@ class BucketSpaceRestriction(ContinuousRestriction):
         else:
             self.buckets = np.ones((self.number_of_buckets,), dtype=bool)
 
-    def contains(self, x):
-        """Determines if a number is part of the action space
-
-        Args:
-            x: Number
+    @property
+    def is_np_flattenable(self) -> bool:
+        """Checks whether this space can be flattened to a :class:`gymnasium.spaces.Box`.
 
         Returns:
-            Boolean indicating if it is part of the action space
+            `True`
+        """
+        return True
+
+    def contains(self, x):
+        """Check if a continuous action is allowed.
+
+        Args:
+            x: The continuous action
+
+        Returns:
+            `True` if the action is allowed. `False` otherwise
         """
         return False if x < self.a or x >= self.b else self.buckets[self._bucket(x)]
 
     def sample(self, mask: None = None):
-        """Sample a random action from a uniform distribution over the action space
+        """Randomly sample a continuous action from a uniform distribution over the allowed action space
 
         Args:
-            mask: A mask for sampling values from the Box space, currently unsupported.
+            mask: The mask used for sampling (currently no effect)
 
         Returns:
-            Sampled action as a float
+            Sampled continuous action
         """
         if not self.intervals:
             return None
@@ -779,10 +895,10 @@ class BucketSpaceRestriction(ContinuousRestriction):
         return self.intervals[-1][1]
 
     def clone(self):
-        """Returns a copy of the action space
+        """Returns a copy of the :class:`BucketSpaceRestriction`
 
         Returns:
-            space: Action space copy
+            :class:`BucketSpaceRestriction` copy
         """
         assert isinstance(self.base_space, Box)
 
@@ -794,25 +910,25 @@ class BucketSpaceRestriction(ContinuousRestriction):
         )
 
     def clone_and_remove(self, x):
-        """Returns a copy of the action space in which buckets containing a specific
-        value are removed
+        """Returns a copy of the :class:`BucketSpaceRestriction` without buckets containing a specific value
 
         Args:
-            x: Buckets containing this value should be removed from the action space
+            x: Buckets containing this value should be removed from the allowed action space
 
         Returns:
-            space: Action space copy
+            :class:`BucketSpaceRestriction` copy
         """
         space = self.clone()
         space.remove(x)
         return space
 
     def remove(self, x, with_epsilon=True):
-        """Removes buckets containing a specific value from the action space
+        """Remove buckets containing a specific value from the allowed action space
 
         Args:
-            x: Value with which buckets are to be removed
-            with_epsilon: Whether a subset of epsilon around x should be removed
+            x: Buckets containing this value should be removed from the allowed action space
+            with_epsilon: If `True`, a subset of epsilon around x is removed.
+                Otherwise, only buckets containing the specific value are removed.
         """
         x = Decimal(f"{x}")
 
@@ -822,11 +938,12 @@ class BucketSpaceRestriction(ContinuousRestriction):
             self.buckets[self._bucket(x)] = False
 
     def add(self, x, with_epsilon=True):
-        """Add buckets containing a specific value to the action space
+        """Add buckets containing a specific value to the allowed action space
 
         Args:
-            x: Value with which buckets are to be added
-            with_epsilon: Whether a subset of epsilon around x should be added
+            x: Buckets containing this value should be added to the allowed action space
+            with_epsilon: If `True`, a subset of epsilon around x is added.
+                Otherwise, only buckets containing the specific value are added.
         """
         x = Decimal(f"{x}")
 
@@ -837,12 +954,12 @@ class BucketSpaceRestriction(ContinuousRestriction):
 
     @property
     def intervals(self):
-        """Returns all intervals of the action space ordered
+        """Return all intervals of the allowed action space in an ordered way.
 
         Returns:
-            List of tuples containing the ordered intervals. For example:
+            List of tuples containing the ordered intervals.
 
-            [(0.1,0.5), (0.7,0.9)]
+            For example: [(0.1,0.5), (0.7,0.9)]
         """
         a, intervals = None, []
         for i in range(self.number_of_buckets):
@@ -858,17 +975,24 @@ class BucketSpaceRestriction(ContinuousRestriction):
         return intervals
 
     def _bucket(self, x):
-        """Finds the bucket which contains a specific value
+        """Return the bucket which contains a specific value
 
         Args:
             x: Value for which the bucket has to be found
 
         Returns:
-            Integer (ID) of the bucket
+            Indicator of the bucket
         """
         return math.floor((x - self.a) / self.bucket_width)
 
     def _set(self, x, value=True):
+        """Set the indicator value for the bucket of a specific value manually.
+
+        Args:
+            x: The indicator value for the bucket containing x is modified
+            value: If `True`, the bucket containing x belongs to the allowed action space.
+                Otherwise, the bucket is unavailable.
+        """
         lower_bucket = (
             self._bucket(x - self.epsilon) if x - self.epsilon >= self.a else None
         )
@@ -896,6 +1020,7 @@ class BucketSpaceRestriction(ContinuousRestriction):
         self.buckets = np.ones((self.number_of_buckets,), dtype=bool)
 
     def __str__(self):
+        """String representation of the :class:`IntervalUnionRestriction`."""
         intervals = (
             " ".join(f"[{float(a)}, {float(b)})" for a, b in self.intervals)
             if self.intervals
@@ -904,6 +1029,7 @@ class BucketSpaceRestriction(ContinuousRestriction):
         return f"<BucketSpace {intervals}>"
 
     def __repr__(self):
+        """Representation of the :class:`IntervalUnionRestriction`."""
         return self.__str__()
 
     def __bool__(self):
@@ -925,10 +1051,7 @@ class BucketSpaceRestriction(ContinuousRestriction):
 
 
 class PredicateRestriction(Restriction):
-    """Represents a restriction of an arbitrary space as the set of elements for which
-    a predicate is True.
-    """
-
+    """Representation of an arbitrary space as the set of elements for which a predicate is True."""
     def __init__(
         self,
         base_space: gym.Space,
@@ -942,10 +1065,31 @@ class PredicateRestriction(Restriction):
 
     @property
     def is_np_flattenable(self) -> bool:
+        """Checks whether this space can be flattened to a :class:`gymnasium.spaces.Box`.
+
+        Returns:
+            `False`
+        """
         return False
 
     def sample(self, mask: Any | None = None) -> int:
+        """Randomly sample a set of elements for which the predicate is True
+
+        Args:
+            mask: The mask used for sampling (currently no effect)
+
+        Returns:
+            Sampled set of elements
+        """
         raise NotImplementedError
 
     def contains(self, x: Any) -> bool:
+        """Check if an action is allowed and the predicate is True.
+
+        Args:
+            x: The action
+
+        Returns:
+            `True` if the action is allowed. `False` otherwise
+        """
         return self.base_space.contains(x) and self.predicate(x)
