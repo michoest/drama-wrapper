@@ -10,7 +10,7 @@ sys.path.insert(0, '..')
 # -- Project information -----------------------------------------------------
 # https://www.sphinx-doc.org/en/master/usage/configuration.html#project-information
 
-project = 'Dynamic Interval Restrictions'
+project = 'DRAMA'
 copyright = '2023, Michael Oesterle and Tim Grams'
 author = 'Michael Oesterle, Tim Grams'
 
