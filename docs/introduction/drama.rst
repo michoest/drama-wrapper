@@ -6,6 +6,7 @@ The framework is compatible with any existing PettingZoo environment and may sea
 restrictions.
 
 .. image:: drama-loop.png
+   :width: 600
 
 The updated loop is built with three new fundamental entities: The restriction wrapper, restriction representations,
 and restriction learning agents.
