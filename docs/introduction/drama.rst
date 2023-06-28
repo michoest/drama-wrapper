@@ -5,7 +5,7 @@ DRAMA extends the classic agent-environment loop with a restrictor for complex a
 The framework is compatible with any existing PettingZoo environment and may seamlessly extend the action spaces with
 restrictions.
 
-.. image:: img/drama-loop.png
+.. image:: drama-loop.png
 
 The updated loop is built with three new fundamental entities: The restriction wrapper, restriction representations,
 and restriction learning agents.
