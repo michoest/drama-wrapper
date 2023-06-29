@@ -2,7 +2,7 @@ Mapless Navigation
 ==================
 
 .. image:: ../_static/trajectory-restricted.png
-   :width: 400
+   :width: 300
    :align: center
 
 In this navigation task, an TD3 agent aims to reach a goal on a two-dimensional map with complex and dynamic action spaces.
