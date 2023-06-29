@@ -3,7 +3,7 @@
     <h1 align="center">DRAMA at the PettingZoo</h1>
     <h2 align="center">Dynamically Restricted Action Spaces for<br>Multi-Agent Reinforcement Learning Frameworks</h2>
 
-.. image:: ../_static/usecase.gif
+.. image:: _static/usecase.gif
    :width: 400
    :align: center
 
