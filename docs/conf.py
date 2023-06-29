@@ -29,5 +29,11 @@ exclude_patterns = ['_build', 'Thumbs.db', '.DS_Store']
 # -- Options for HTML output -------------------------------------------------
 # https://www.sphinx-doc.org/en/master/usage/configuration.html#options-for-html-output
 
-html_theme = 'sphinx_rtd_theme'
+html_theme = "furo"
+html_title = "PettingZoo Documentation"
 html_static_path = ['_static']
+html_theme_options = {
+    "light_css_variables": {
+        "sidebar-tree": "#7C4DFF"
+    },
+}
