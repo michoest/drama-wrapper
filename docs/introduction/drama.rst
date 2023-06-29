@@ -5,7 +5,7 @@ DRAMA extends the classic agent-environment loop with a restrictor for complex a
 The framework is compatible with any existing PettingZoo environment and may seamlessly extend the action spaces with
 restrictions.
 
-.. image:: drama-loop.png
+.. image:: ../_static/drama-loop.png
    :width: 400
    :align: center
 
