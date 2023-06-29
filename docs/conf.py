@@ -30,10 +30,11 @@ exclude_patterns = ['_build', 'Thumbs.db', '.DS_Store']
 # https://www.sphinx-doc.org/en/master/usage/configuration.html#options-for-html-output
 
 html_theme = "furo"
-html_title = "PettingZoo Documentation"
+html_title = "DRAMA Documentation"
 html_static_path = ['_static']
 html_theme_options = {
     "light_css_variables": {
-        "sidebar-tree": "#7C4DFF"
+        "color-brand-primary": "#202123",
+        "color-brand-content": "#202123"
     },
 }

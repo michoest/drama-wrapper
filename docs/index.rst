@@ -1,6 +1,7 @@
 .. raw:: html
 
-    <h2 align="center">DRAMA at the PettingZoo:<br>Dynamically Restricted Action Spaces for Multi-Agent Reinforcement Learning Frameworks</h2>
+    <h1 align="center">DRAMA at the PettingZoo</h1>
+    <h2 align="center">Dynamically Restricted Action Spaces for<br>Multi-Agent Reinforcement Learning Frameworks</h2>
 
 **DRAMA is a framework to extend the PettingZoo agent-environment cycle with complex, dynamic,
 and potentially self-learning action space restrictions.**
