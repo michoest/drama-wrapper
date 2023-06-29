@@ -1,7 +1,7 @@
 Traffic Control
 ===============
 
-.. image:: _static/traffic-setup.png
+.. image:: ../_static/traffic-setup.png
    :width: 400
    :align: center
 

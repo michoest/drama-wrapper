@@ -1,7 +1,7 @@
 Mapless Navigation
 ==================
 
-.. image:: _static/trajectory-restricted.png
+.. image:: ../_static/trajectory-restricted.png
    :width: 400
    :align: center
 
