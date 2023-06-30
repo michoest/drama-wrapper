@@ -860,7 +860,7 @@ class BucketSpaceRestriction(ContinuousRestriction):
         )
         self.number_of_buckets = math.ceil((self.b - self.a) / self.bucket_width)
 
-        if available_buckets:
+        if available_buckets is not None:
             assert (
                 len(available_buckets) == self.number_of_buckets
             ), "Not all available bucket indicators provided!"

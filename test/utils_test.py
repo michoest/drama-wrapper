@@ -17,7 +17,8 @@ from drama.restrictors import (
     IntervalUnionActionSpace,
     BucketSpaceActionSpace,
 )
-from drama.restrictions import DiscreteSetRestriction, DiscreteVectorRestriction, IntervalUnionRestriction
+from drama.restrictions import DiscreteSetRestriction, DiscreteVectorRestriction, IntervalUnionRestriction, \
+    BucketSpaceRestriction
 
 
 class DiscreteSetActionSpaceTest(unittest.TestCase):
@@ -101,7 +102,27 @@ class IntervalUnionActionSpaceTest(unittest.TestCase):
 
 
 class BucketSpaceActionSpaceTest(unittest.TestCase):
-    pass
+    b1, b2 = Box(low=0.0, high=10.0), Box(low=-110.0, high=110.0)
+
+    s1 = BucketSpaceActionSpace(b1)
+    s2 = BucketSpaceActionSpace(b2, bucket_width=40.0)
+
+    r1 = BucketSpaceRestriction(b1)
+    r2 = BucketSpaceRestriction(b2, bucket_width=40.0)
+
+    def test_flatten(self):
+        self.assertTrue(np.array_equal(flatten(self.s1, self.r1),
+                                       np.array([0, 10, 10,  1,  1,  1,  1,  1,  1,  1,  1,  1,  1])))
+        self.assertTrue(np.array_equal(flatten(self.s2, self.r2),
+                                       np.array([-110, 110, 6, 1, 1, 1, 1, 1, 1])))
+
+    def test_flatdim(self):
+        assert flatdim(self.s1) == 13
+        assert flatdim(self.s2) == 9
+
+    def test_unflatten(self):
+        self.assertEqual(unflatten(self.s1, np.array([0, 10, 10,  1,  1,  1,  1,  1,  1,  1,  1,  1,  1])), self.r1)
+        self.assertEqual(unflatten(self.s2, np.array([-110, 110, 6, 1, 1, 1, 1, 1, 1])), self.r2)
 
 
 class PredicateActionSpaceTest(unittest.TestCase):
