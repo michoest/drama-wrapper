@@ -1,11 +1,12 @@
 # Enable module import from ../src
 import sys
 import os
+
 sys.path.append(os.path.dirname(os.path.realpath(__file__)) + "/..")
 
 # External modules
 import unittest
-from gymnasium.spaces import Discrete
+from gymnasium.spaces import Discrete, Box
 import numpy as np
 
 # Internal modules
@@ -16,7 +17,7 @@ from drama.restrictors import (
     IntervalUnionActionSpace,
     BucketSpaceActionSpace,
 )
-from drama.restrictions import DiscreteSetRestriction, DiscreteVectorRestriction
+from drama.restrictions import DiscreteSetRestriction, DiscreteVectorRestriction, IntervalUnionRestriction
 
 
 class DiscreteSetActionSpaceTest(unittest.TestCase):
@@ -74,7 +75,29 @@ class DiscreteVectorActionSpaceTest(unittest.TestCase):
 
 
 class IntervalUnionActionSpaceTest(unittest.TestCase):
-    pass
+    b1, b2 = Box(low=0.0, high=1.0), Box(low=-110.0, high=np.inf)
+
+    s1 = IntervalUnionActionSpace(b1)
+    s2 = IntervalUnionActionSpace(b2)
+
+    r1 = IntervalUnionRestriction(b1)
+    r2 = IntervalUnionRestriction(b2)
+
+    def test_flatten_padded(self):
+        self.assertTrue(np.array_equal(flatten(self.s1, self.r1, pad=True, max_len=7),
+                                       np.array([0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0])))
+        self.assertTrue(np.array_equal(flatten(self.s2, self.r2, pad=True, max_len=7),
+                                       np.array([-110.0, np.inf, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0])))
+
+    def test_flatdim(self):
+        with self.assertRaises(ValueError):
+            flatdim(self.s1)
+        with self.assertRaises(ValueError):
+            flatdim(self.s2)
+
+    def test_unflatten(self):
+        self.assertEqual(unflatten(self.s1, np.array([0, 1, 0, 0, 0, 0, 0, 0])), self.r1)
+        self.assertEqual(unflatten(self.s2, np.array([-110.0, np.inf, -5, -5, -5, -5, -5, -5])), self.r2)
 
 
 class BucketSpaceActionSpaceTest(unittest.TestCase):

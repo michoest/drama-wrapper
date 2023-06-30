@@ -184,7 +184,7 @@ def _flatdim_discrete_vector_action_space(space: DiscreteVectorActionSpace) -> i
 
 
 @flatdim.register(IntervalUnionActionSpace)
-def _flatdim_graph(space: IntervalUnionActionSpace):
+def _flatdim_interval_union_action_space(space: IntervalUnionActionSpace):
     raise ValueError(
         "Cannot get flattened size as the IntervalUnionActionSpace has a dynamic size."
     )

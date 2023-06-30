@@ -822,6 +822,14 @@ class IntervalUnionRestriction(ContinuousRestriction):
         """Representation of the :class:`IntervalUnionRestriction`."""
         return self.__str__()
 
+    def __eq__(self, other):
+        """Check whether `other` is equivalent to this instance."""
+        return (
+                isinstance(other, IntervalUnionRestriction)
+                and (self.base_space == other.base_space)
+                and np.array_equal(self.intervals(), other.intervals())
+        )
+
 
 class BucketSpaceRestriction(ContinuousRestriction):
     """Representation of a one-dimensional :class:`gymnasium.spaces.Box` restriction as a binary vector
