@@ -172,6 +172,9 @@ class DiscreteVectorRestriction(DiscreteRestriction):
             allowed_actions: Optional, initial binary vector indicating allowed actions
             seed: Random seed for sampling. Defaults to None
         """
+        if allowed_actions is not None:
+            assert len(allowed_actions) == base_space.n, 'The allowed actions vector has not the required length'
+            assert np.all((allowed_actions == 1) | (allowed_actions == 0)), 'The allowed actions vector is not binary'
         super().__init__(base_space, seed=seed)
 
         self.allowed_actions = (
@@ -216,6 +219,14 @@ class DiscreteVectorRestriction(DiscreteRestriction):
     def __repr__(self) -> str:
         """Representation of the :class:`DiscreteVectorRestriction`."""
         return f"{self.__class__.__name__}({self.allowed_actions})"
+
+    def __eq__(self, other):
+        """Check whether `other` is equivalent to this instance."""
+        return (
+                isinstance(other, DiscreteVectorRestriction)
+                and (self.base_space == other.base_space)
+                and np.array_equal(self.allowed_actions, other.allowed_actions)
+        )
 
 
 class Node(object):
