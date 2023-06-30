@@ -4,7 +4,6 @@ from matplotlib import pyplot as plt
 
 from examples.navigation.env import NavigationEnvironment
 from examples.navigation.restrictor import NavigationRestrictor
-from drama.restrictions import IntervalUnionRestriction
 from drama.wrapper import RestrictionWrapper
 
 
